@@ -24,8 +24,8 @@ class Sensor(MyPublisher):
 
 
 if __name__ == '__main__':
-    topic_type = 'bed'
-    sensor_type = 'motion'
+    topic_type = 'weather'
+    sensor_type = 'humidity'
     s_ID = 0
     sensor = Sensor(s_ID, topic_type, sensor_type)
     sensor.start()
