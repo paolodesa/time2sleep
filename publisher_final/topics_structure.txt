@@ -1,0 +1,12 @@
+For the moment the topics are oraganized as:
+
+Time2sleep/bedroomN/sensor_area (N=1,2,3 & sensor_area=weather,bed,light)
+
+For each bedroom and for each sensor_area a message is published and the message contains a JSON with the measurements of the sensors.
+
+Example (3 different messages):
+
+{"project": "Time2sleep", "room": "bedroom1", "sensor_area": "weather", "data": [{"type": "temperature", "value": 24, "timestamp": "1589187661.6469507", "unit": "C"}, {"type": "humidity", "value": 83, "timestamp": "1589187661.64698", "unit": "%"}]}
+{"project": "Time2sleep", "room": "bedroom1", "sensor_area": "bed", "data": [{"type": "vibration", "value": 56, "timestamp": "1589187662.648848", "unit": "%"}, {"type": "noise", "value": 53, "timestamp": "1589187662.6488762", "unit": "dB"}, {"type": "motion", "value": 70, "timestamp": "1589187662.648886", "unit": "%"}]}
+{"project": "Time2sleep", "room": "bedroom1", "sensor_area": "light", "data": [{"type": "motion", "value": 59, "timestamp": "1589187663.6507642", "unit": "%"}]}
+
