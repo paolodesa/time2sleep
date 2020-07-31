@@ -9,17 +9,10 @@ class SimpleService(object):
         pass
 
     def GET(self, *uri, **params):
-        output = 'Time2Sleep Web Service'
-        '''if len(uri) != 0:
-            output += '<br>uri: ' + ','.join(uri)
-        if params != {}:
-            output += '<br>params: ' + str(params)'''
         with open('t2s_conf.json', 'r') as f:
             t2s_conf = json.load(f)
             f.close()
-        for x in t2s_conf:
-            output += '<br><br>Current config:<br><br>' + x + ': ' + str(t2s_conf[x])
-        return output
+        return json.dumps(t2s_conf)
 
     def POST(self, *uri, **params):
         if len(uri) == 1 and uri[0] == 'changeConfig':
