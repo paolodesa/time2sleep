@@ -15,6 +15,7 @@ class SimpleService(object):
         return json.dumps(t2s_conf)
 
     def POST(self, *uri, **params):
+        # TODO: publish configuration changing time
         if len(uri) == 1 and uri[0] == 'changeConfig':
             try:
                 with open('t2s_conf.json', 'r+') as f:

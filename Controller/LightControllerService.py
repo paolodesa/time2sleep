@@ -8,6 +8,7 @@ class LightControllerService:
     def __init__(self, clientID, broker_host, broker_port):
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
         self.sensor_motion = 0
+        self.config_changed = ''
         self.light = False
 
     def notify(self, topic, payload):
@@ -17,7 +18,7 @@ class LightControllerService:
 
         if topic == main_topic + 'config_changed':
             message = json.load(payload)
-            self.config_changed = true
+            self.config_changed = True
 
     def LightOn(self):
         msg = json.dumps({'light': True})
@@ -32,7 +33,7 @@ class LightControllerService:
 
 if __name__ == '__main__':
 
-    # -- Retrieve here the list of services from the catalogue
+    # -- Retrieve here the list of services and devices from the cataloguest
     # TODO
     rb_url = 'http://127.0.0.1:8080'
     main_topic = 'Time2sleep/bedroom1/'
@@ -40,25 +41,38 @@ if __name__ == '__main__':
     broker_port = 1883
 
     # -- Retrieve here the config file from the RaspBerry
+    # TODO: make it scalable for many rooms
     r = requests.get(rb_url)
-    config = r.json()
-    print(config['alarm_time'])
+    config_dict = r.json()
+    night_start = config_dict['night_start']
+    alarm_time = config_dict['alarm_time']
 
 
     # -- Start subscription and publish actuators commands
     # TODO: make it scalable for many rooms
 
-    # myLightController = LightControllerService('LightControllerService', broker_host, broker_port)
-    # myLightController.client.start()
-    # time.sleep(1)
-    # myLightController.client.mySubscribe(main_topic + 'light')
-    # try:
-    #     while True:
-    #         while not myLightController.light:
-    #             if myLightController.sensor_motion >= 50:
-    #                 myLightController.LightOn()
-    #         while myLightController.light:
-    #             if myLightController.sensor_motion < 50:
-    #                 myLightController.LightOff()
-    # except KeyboardInterrupt:
-    #     myLightController.client.stop()
+    myLightController = LightControllerService('LightControllerService', broker_host, broker_port)
+    while True:
+        myLightController.client.start()
+        myLightController.client.mySubscribe('TOPIC TO WARN ABOUT CONFIG CHANGES')
+        if myLightController.config_changed: # <----- SISTEMARE QUA
+            config_dict = requests.get(rb_url).json()
+            night_start = config_dict['night_start']
+            alarm_time = config_dict['alarm_time']
+            myLightController.config_changed = False
+
+        while night_start <= time.time() <= alarm_time:
+            time.sleep(1)
+            myLightController.client.mySubscribe(main_topic + 'light')
+            try:
+                while True:
+                    while not myLightController.light:
+                        if myLightController.sensor_motion >= 50:
+                            myLightController.LightOn()
+                    while myLightController.light:
+                        if myLightController.sensor_motion < 50:
+                            myLightController.LightOff()
+            except KeyboardInterrupt:
+                myLightController.client.stop()
+
+        myLightController.client.stop()
