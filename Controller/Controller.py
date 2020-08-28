@@ -1,3 +1,5 @@
+### DEPRECATED ###
+
 from MyMQTT import *
 import json
 import time
