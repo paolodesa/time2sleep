@@ -32,7 +32,7 @@ class LightControllerService:
         # TODO: if topic == main_topic/*/ + 'config_updates': room = topic.parse('/')[1]
         if topic == main_topic + 'config_updates':
             self.updateConfig()
-            self.last_update = payload
+            self.last_update = message
 
     def LightOn(self):
         msg = json.dumps({'light': True})

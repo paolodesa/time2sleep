@@ -41,7 +41,7 @@ class SleepStateService:
         # TODO: if topic == main_topic/*/ + 'config_updates': room = topic.parse('/')[1]
         if topic == main_topic + 'config_updates':
             self.updateConfig()
-            self.last_update = payload
+            self.last_update = message
 
     def evalState(self):
         if self.sensor_motion + self.sensor_noise + self.sensor_vibration > THRESHOLD:
@@ -92,15 +92,16 @@ if __name__ == '__main__':
 
     try:
         while True:
-            # Subscribe to motion sensor topic during the night
-            if mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time:
-                logging.info(mySleepStateEval.client.mySubscribe(main_topic + 'bed'))
+            if mySleepStateEval.alarm_time:
+                # Subscribe to motion sensor topic during the night
+                if mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time:
+                    logging.info(mySleepStateEval.client.mySubscribe(main_topic + 'bed'))
 
-                while mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time:
-                    time.sleep(5)
-                    mySleepStateEval.evalState()
+                    while mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time:
+                        time.sleep(5)
+                        mySleepStateEval.evalState()
 
-                logging.info(mySleepStateEval.client.myUnsubscribe(main_topic + 'bed'))
+                    logging.info(mySleepStateEval.client.myUnsubscribe(main_topic + 'bed'))
 
     except KeyboardInterrupt:
         logging.info(mySleepStateEval.client.stop())
