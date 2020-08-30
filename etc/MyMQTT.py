@@ -2,7 +2,7 @@ import paho.mqtt.client as PahoMQTT
 
 
 class MyMQTT:
-    def __init__(self, clientID, broker, port, notifier):
+    def __init__(self, clientID, broker, port, *notifier):
         self.broker = broker
         self.port = port
         self.notifier = notifier
@@ -23,7 +23,8 @@ class MyMQTT:
 
     def myOnMessageReceived(self, paho_mqtt, userdata, msg):
         # A new message is received
-        self.notifier.notify(msg.topic, msg.payload)
+        if self.notifier:
+            self.notifier.notify(msg.topic, msg.payload)
 
     def myPublish(self, topic, msg):
         # if needed, you can do some computation or error-check before publishing

@@ -1,4 +1,6 @@
 {
+    "network_name": "time2sleep",
+    "room_name": "bedroom",
     "night_start": "20,08,14,20,29",
     "alarm_time": "20,08,14,20,30"
 }
