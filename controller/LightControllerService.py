@@ -1,4 +1,4 @@
-from MyMQTT import *
+from etc.MyMQTT import *
 import json
 from datetime import datetime
 import requests
