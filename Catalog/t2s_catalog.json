@@ -2,6 +2,7 @@
     "devices": [
         {
             "ip": "10.0.0.10",
+            "port": 8080,
             "name": "bedroom",
             "sensors": [
                 "vibration",

@@ -21,28 +21,29 @@ class LightControllerService:
         self.sensor_motion = 0
         self.light_on = False
         self.last_update = ''
+        self.main_topic = ''
 
         self.updateConfig()
 
     def notify(self, topic, payload):
-        if topic == main_topic + 'light':
+        if topic == self.main_topic + 'light':
             message = json.loads(payload)
             self.sensor_motion = message['data'][0]['value']
 
         # TODO: if topic == main_topic/*/ + 'config_updates': room = topic.parse('/')[1]
-        if topic == main_topic + 'config_updates':
+        if topic == self.main_topic + 'config_updates':
             self.updateConfig()
             self.last_update = message
 
     def LightOn(self):
         msg = json.dumps({'light': True})
-        self.client.myPublish(main_topic + 'actuators', msg)
+        self.client.myPublish(self.main_topic + 'actuators', msg)
         self.light_on = True
         logging.debug(self.client.clientID + 'LIGHT ON')
 
     def LightOff(self):
         msg = json.dumps({'light': False})
-        self.client.myPublish(main_topic + 'actuators', msg)
+        self.client.myPublish(self.main_topic + 'actuators', msg)
         self.light_on = False
         logging.debug(self.client.clientID + 'LIGHT OFF')
 
@@ -52,6 +53,7 @@ class LightControllerService:
         config_dict = r.json()
         self.night_start = datetime.strptime(config_dict['night_start'], '%y,%m,%d,%H,%M')
         self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%y,%m,%d,%H,%M')
+        self.main_topic = config_dict['network'] + '/' + config_dict['room_name'] + '/'
         logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s', self.night_start, self.alarm_time)
 
 
@@ -68,22 +70,18 @@ if __name__ == '__main__':
     broker_host = catalogue['broker_host']
     broker_port = catalogue['broker_port']
     devices = catalogue['devices']
-
-    for dev in devices:
-        if 'motion' in dev["sensors"] and 'light' in dev["actuators"]:
-            url = dev["ip"]
-
-    rb_url = 'http://127.0.0.1:8080'
-    main_topic = 'Time2sleep/bedroom3/'
-
-
-    logging.info('raspberry_url:%s, main_topic:%s, broker_host:%s, broker_port:%d',
-                 rb_url, main_topic, broker_host, broker_port)
+    logging.info('broker_host:%s, broker_port', broker_host, broker_port)
 
     # Instantiate and start the light controller
-    logging.info('Instantiating the controller')
-    myLightController = LightControllerService('LightControllerService', rb_url, broker_host, broker_port)
-    logging.info(myLightController.client.start())
+    logging.info('Instantiating the controllers')
+    rooms = []
+    for dev in devices:
+        if 'motion' in dev["sensors"] and 'light' in dev["actuators"]:
+            url = 'http://' + dev["ip"] + ':' + dev["port"]
+            id = dev["name"]
+            rooms.append(LightControllerService(id, url, broker_host, broker_port))
+            logging.info(rooms[-1].client.start())
+
 
     # Subscribe to config change alert topic
     # TODO: for room in rooms:     myLightController.client.mySubscribe(main_topic + room + '/config_updates')
