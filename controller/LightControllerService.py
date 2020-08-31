@@ -63,12 +63,19 @@ if __name__ == '__main__':
     logging.info('Simulation started')
 
     # -- Retrieve here the list of services and devices from the catalogue
-    # TODO
     logging.info('Connecting to the catalogue...')
+    catalogue = requests.get('http://127.0.0.1:8082').json()
+    broker_host = catalogue['broker_host']
+    broker_port = catalogue['broker_port']
+    devices = catalogue['devices']
+
+    for dev in devices:
+        if 'motion' in dev["sensors"] and 'light' in dev["actuators"]:
+            url = dev["ip"]
+
     rb_url = 'http://127.0.0.1:8080'
     main_topic = 'Time2sleep/bedroom3/'
-    broker_host = '127.0.0.1'
-    broker_port = 1883
+
 
     logging.info('raspberry_url:%s, main_topic:%s, broker_host:%s, broker_port:%d',
                  rb_url, main_topic, broker_host, broker_port)

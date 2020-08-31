@@ -41,26 +41,26 @@ if __name__ == '__main__':
             time_instant = datetime.now()
             DataPublisher.myPublish(main_topic + '/sensors/temperature', json.dumps({
                 'value': temperature,
-                'timestamp': time_instant
+                'timestamp': str(time_instant)
             }))
             DataPublisher.myPublish(main_topic + '/sensors/humidity', json.dumps({
                 'value': humidity,
-                'timestamp': time_instant
+                'timestamp': str(time_instant)
             }))
             DataPublisher.myPublish(main_topic + '/sensors/vibration', json.dumps({
                 'value': vibration,
-                'timestamp': time_instant
+                'timestamp': str(time_instant)
             }))
             DataPublisher.myPublish(main_topic + '/sensors/motion', json.dumps({
                 'value': motion,
-                'timestamp': time_instant
+                'timestamp': str(time_instant)
             }))
             DataPublisher.myPublish(main_topic + '/sensors/noise', json.dumps({
                 'value': noise,
-                'timestamp': time_instant
+                'timestamp': str(time_instant)
             }))
 
-            time.sleep(1)
+            time.sleep(15)
 
         except KeyboardInterrupt:
             break

@@ -11,15 +11,10 @@ class ServiceCatalog(object):
         pass
 
     def GET(self, *uri, **params):
-        output = 'Time2Sleep Service Catalog'
         with open('t2s_catalog.json', 'r') as f:
             t2s_catalog = json.load(f)
             f.close()
-        output += '<br><br>Current devices:'
-        for x in t2s_catalog['devices']:
-            output += '<br>' + str(x)
-        output += '<br><br>Last updated: ' + datetime.datetime.fromtimestamp(t2s_catalog['last_updated']).strftime("%d/%m/%Y, %H:%M:%S")
-        return output
+        return json.dumps(t2s_catalog)
 
     def POST(self, *uri, **params):
         if len(uri) == 1 and uri[0] == 'addDevice':
@@ -29,16 +24,17 @@ class ServiceCatalog(object):
                     new_device_info = json.loads(cherrypy.request.body.read())
                     try:
                         ip = new_device_info['ip']
-                        port = new_device_info['port']
-                        services = new_device_info['services']
+                        name = new_device_info['name']
+                        sensors = new_device_info['sensors']
+                        actuators = new_device_info['actuators']
                     except KeyError:
                         f.close()
                         raise cherrypy.HTTPError(400, 'Bad request')
 
-                    new_dev = {'ip': ip, 'port': port, 'services': services}
+                    new_dev = {'ip': ip, 'name': name, 'sensors': sensors, 'actuators': actuators}
 
                     for d in t2s_catalog['devices']:
-                        if (d['ip'] == ip):
+                        if d['ip'] == ip:
                             t2s_catalog['devices'].pop(t2s_catalog['devices'].index(d))
 
                     t2s_catalog['devices'].append(new_dev)
@@ -63,7 +59,7 @@ class ServiceCatalog(object):
 
                     found = False
                     for d in t2s_catalog['devices']:
-                        if (d['ip'] == ip):
+                        if d['ip'] == ip:
                             t2s_catalog['devices'].pop(t2s_catalog['devices'].index(d))
                             found = True
 
@@ -86,7 +82,8 @@ if __name__ == '__main__':
         '/':
             {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-                'tools.sessions.on': True
+                'tools.sessions.on': True,
+                'server.socket_port': 8082
             }
     }
     cherrypy.quickstart(ServiceCatalog(), '/', conf)
