@@ -1,0 +1,14 @@
+{
+    "devices": [
+        {
+            "ip": "10.0.0.10",
+            "port": "1883",
+            "services": [
+                "light",
+                "vibration",
+                "motion"
+            ]
+        }
+    ],
+    "last_updated": 1598697344.233227
+}
