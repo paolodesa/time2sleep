@@ -8,7 +8,7 @@ import time
 import random
 
 if __name__ == '__main__':
-    with open('../t2s_conf.json', 'r') as f:
+    with open('../etc/t2s_conf.json', 'r') as f:
         t2s_conf = json.load(f)
         network = t2s_conf['network_name']
         room = t2s_conf['room_name']

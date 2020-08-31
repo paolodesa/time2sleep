@@ -9,7 +9,7 @@ class SimpleService(object):
         pass
 
     def GET(self, *uri, **params):
-        with open('t2s_conf.json', 'r') as f:
+        with open('../etc/t2s_conf.json', 'r') as f:
             t2s_conf = json.load(f)
             f.close()
         return json.dumps(t2s_conf)
@@ -18,7 +18,7 @@ class SimpleService(object):
         # TODO: publish configuration changing time
         if len(uri) == 1 and uri[0] == 'changeConfig':
             try:
-                with open('t2s_conf.json', 'r+') as f:
+                with open('../etc/t2s_conf.json', 'r+') as f:
                     t2s_conf = json.load(f)
                     try:
                         alarm_time = params['alarmTime']
