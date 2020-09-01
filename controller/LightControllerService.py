@@ -19,6 +19,7 @@ class LightControllerService:
         self.rb_url = rb_url
         self.night_start = 0
         self.alarm_time = 0
+        self.light_set = True
 
         self.sensor_motion = 0
         self.light_on = False
@@ -66,10 +67,10 @@ def runLightController(myLightController):
     try:
         while True:
             # Subscribe to motion sensor topic during the night
-            if myLightController.night_start <= datetime.now() <= myLightController.alarm_time:
+            if (myLightController.night_start <= datetime.now() <= myLightController.alarm_time) and myLightController.light_set:
                 logging.info(myLightController.client.mySubscribe(myLightController.main_topic + '/sensors/motion'))
 
-                while myLightController.night_start <= datetime.now() <= myLightController.alarm_time:
+                while (myLightController.night_start <= datetime.now() <= myLightController.alarm_time) and myLightController.light_set:
                     if not myLightController.light_on:
                         if myLightController.sensor_motion >= THRESHOLD:
                             myLightController.LightOn()
