@@ -1,7 +1,7 @@
 # I consider this script to run on the raspberry where also the config file is stored, so it won't be necessary
 # to retrieve it. The catalogue will be reached anyway to retrieve the broker end points.
 
-from etc.MyMQTT import *
+from MyMQTT import *
 import json
 from datetime import datetime
 import time

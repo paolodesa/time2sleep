@@ -24,6 +24,7 @@ class ServiceCatalog(object):
                     new_device_info = json.loads(cherrypy.request.body.read())
                     try:
                         ip = new_device_info['ip']
+                        port = new_device_info['port']
                         name = new_device_info['name']
                         sensors = new_device_info['sensors']
                         actuators = new_device_info['actuators']
@@ -31,7 +32,7 @@ class ServiceCatalog(object):
                         f.close()
                         raise cherrypy.HTTPError(400, 'Bad request')
 
-                    new_dev = {'ip': ip, 'name': name, 'sensors': sensors, 'actuators': actuators}
+                    new_dev = {'ip': ip, 'port': port, 'name': name, 'sensors': sensors, 'actuators': actuators}
 
                     for d in t2s_catalog['devices']:
                         if d['ip'] == ip:
@@ -82,8 +83,8 @@ if __name__ == '__main__':
         '/':
             {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-                'tools.sessions.on': True,
-                'server.socket_port': 8082
+                'tools.sessions.on': True
             }
     }
+    cherrypy.config.update({'server.socket_port': 8082})
     cherrypy.quickstart(ServiceCatalog(), '/', conf)

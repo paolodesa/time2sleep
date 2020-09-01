@@ -1,22 +1,23 @@
 {
+    "broker_host": "localhost",
+    "broker_port": 1883,
     "devices": [
         {
-            "ip": "10.0.0.10",
+            "actuators": [
+                "light",
+                "alarm"
+            ],
+            "ip": "127.0.0.1",
             "name": "bedroom",
+            "port": 8080,
             "sensors": [
                 "vibration",
                 "motion",
                 "noise",
                 "temperature",
                 "humidity"
-            ],
-            "actuators": [
-                "light",
-                "alarm"
             ]
         }
     ],
-    "broker_host": "localhost",
-    "broker_port": 1883,
-    "last_updated": 1598697344.233227
+    "last_updated": 1598947329.1836128
 }
