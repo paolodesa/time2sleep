@@ -45,8 +45,8 @@ class SleepStateService:
         if topic == self.main_topic + '/sensors/vibration':
             self.sensor_vibration = message['value']
 
-        if topic == self.main_topic + '/actuators':
-            if message['start_alarm'] == 0:
+        if topic == self.main_topic + '/actuators/alarm':
+            if message['value'] == 0:
                 self.alarm_stopped = True
 
         # TODO: if topic == self.main_topic/*/ + 'config_updates': room = topic.parse('/')[1]
@@ -85,7 +85,7 @@ def runSleepStateEval(mySleepStateEval):
                     # Subscribe to motion sensor topic during the night
                     if mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time + WINDOW:
                         logging.info(mySleepStateEval.client.mySubscribe(mySleepStateEval.main_topic + '/sensors/#'))
-                        logging.info(mySleepStateEval.client.mySubscribe(mySleepStateEval.main_topic + '/actuators'))
+                        logging.info(mySleepStateEval.client.mySubscribe(mySleepStateEval.main_topic + '/actuators/alarm'))
 
                         while mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time + WINDOW:
                             time.sleep(15)
@@ -96,7 +96,7 @@ def runSleepStateEval(mySleepStateEval):
                             
 
                         logging.info(mySleepStateEval.client.myUnsubscribe(mySleepStateEval.main_topic + '/sensors/#'))
-                        logging.info(mySleepStateEval.client.myUnsubscribe(mySleepStateEval.main_topic + '/actuators'))
+                        logging.info(mySleepStateEval.client.myUnsubscribe(mySleepStateEval.main_topic + '/actuators/alarm'))
                 time.sleep(15)
             except KeyboardInterrupt:
                 logging.info(mySleepStateEval.client.stop())

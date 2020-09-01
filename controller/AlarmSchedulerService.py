@@ -45,15 +45,15 @@ class AlarmSchedulerService:
             self.last_update = message
 
     def alarmStart(self):
-        msg = json.dumps({'start_alarm': 1})
-        self.client.myPublish(self.main_topic + '/actuators', msg)
+        msg = json.dumps({'value': 1})
+        self.client.myPublish(self.main_topic + '/actuators/alarm', msg)
         self.alarm = 1
         logging.info('alarm started')
         time.sleep(3)
 
     def alarmStop(self):
-        msg = json.dumps({'start_alarm': 0})
-        self.client.myPublish(self.main_topic + '/actuators', msg)
+        msg = json.dumps({'value': 0})
+        self.client.myPublish(self.main_topic + '/actuators/alarm', msg)
         self.alarm = 0
         self.sleep_state = 'awake'
         msg = json.dumps({'sleep_state': 'awake'})

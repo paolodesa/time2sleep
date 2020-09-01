@@ -13,13 +13,12 @@ import simpleaudio as sa
 WINDOW = timedelta(minutes=10)
 
 class AlarmActuatorService:
-    def __init__(self, clientID, rb_url, broker_host, broker_port):
+    def __init__(self, clientID, broker_host, broker_port):
 
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
         self.alarm = 0
         self.alarm_set = False
 
-        self.rb_url = rb_url
         self.night_start = 0
         self.alarm_time = 0
         self.last_update = ''
@@ -33,8 +32,8 @@ class AlarmActuatorService:
 
     def notify(self, topic, payload):
         message = json.loads(payload)
-        if topic == self.main_topic + '/actuators':
-            self.alarm = message['start_alarm']
+        if topic == self.main_topic + '/actuators/alarm':
+            self.alarm = message['value']
         if topic == self.main_topic + '/config_updates':
             self.updateConfig()
             self.last_update = message
@@ -49,8 +48,9 @@ class AlarmActuatorService:
 
     def updateConfig(self):
         # -- Retrieve here the config file from the RaspBerry
-        r = requests.get(self.rb_url)
-        config_dict = r.json()
+        with open('../etc/t2sconf.json', 'r') as f:
+            config_dict = json.load(f)
+            f.close()
         self.night_start = datetime.strptime(config_dict['night_start'], '%y,%m,%d,%H,%M')
         self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%y,%m,%d,%H,%M')
         self.alarm_set = config_dict['alarm_set']
@@ -66,7 +66,7 @@ def runAlarmActuator(myAlarmActuator):
             try:
                 if myAlarmActuator.alarm_time and myAlarmActuator.alarm_set:
                     if myAlarmActuator.alarm_time-WINDOW <= datetime.now() <= myAlarmActuator.alarm_time + WINDOW:
-                        logging.info(myAlarmActuator.client.mySubscribe(myAlarmActuator.main_topic + '/actuators'))
+                        logging.info(myAlarmActuator.client.mySubscribe(myAlarmActuator.main_topic + '/actuators/alarm'))
 
                         while myAlarmActuator.alarm_time-WINDOW <= datetime.now() < myAlarmActuator.alarm_time+WINDOW:
 
@@ -78,7 +78,7 @@ def runAlarmActuator(myAlarmActuator):
                                 break
                             time.sleep(1)
 
-                        logging.info(myAlarmActuator.client.myUnsubscribe(myAlarmActuator.main_topic + '/actuators'))
+                        logging.info(myAlarmActuator.client.myUnsubscribe(myAlarmActuator.main_topic + '/actuators/alarm'))
                 time.sleep(15)
             except KeyboardInterrupt:
                 logging.info(myAlarmActuator.client.stop())
@@ -100,21 +100,31 @@ if __name__ == '__main__':
 
     # Instantiate and start the alarm actuators
     logging.info('Instantiating the actuators')
-    rooms = []
+    with open('../etc/t2sconf.json', 'r') as f:
+            config_dict = json.load(f)
+            f.close()
+    myAlarmActuator = AlarmActuatorService('AlarmActuatorService_' + config_dict['room_name'], broker_host, broker_port)
+    
+    logging.info(myAlarmActuator.client.mySubscribe(myAlarmActuator.main_topic + '/config_updates'))
+        
+    while True:
+        try:
+            if myAlarmActuator.alarm_time and myAlarmActuator.alarm_set:
+                if myAlarmActuator.alarm_time-WINDOW <= datetime.now() <= myAlarmActuator.alarm_time + WINDOW:
+                    logging.info(myAlarmActuator.client.mySubscribe(myAlarmActuator.main_topic + '/actuators/alarm'))
 
-    i = 0
-    for dev in devices:
-        if 'motion' in dev["sensors"] and 'alarm' in dev["actuators"]:
-            url = f'http://{dev["ip"]}:{dev["port"]}'
-            id = 'AlarmActuatorService_' + dev["name"] + str(i)
-            rooms.append(AlarmActuatorService(id, url, broker_host, broker_port))
-            logging.info(rooms[-1].client.start())
-            i += 1
+                    while myAlarmActuator.alarm_time-WINDOW <= datetime.now() < myAlarmActuator.alarm_time+WINDOW:
 
-    roomThreads = list()
-    for room in rooms:
-        roomThreads.append(threading.Thread(target=runAlarmActuator, args=(room,)))
+                        if myAlarmActuator.alarm == 1:
+                            myAlarmActuator.alarmStart()
+                            while myAlarmActuator.alarm == 1:
+                                time.sleep(1)
+                            myAlarmActuator.alarmStop()
+                            break
+                        time.sleep(1)
 
-    for roomThread in roomThreads:
-        roomThread.start()
+                    logging.info(myAlarmActuator.client.myUnsubscribe(myAlarmActuator.main_topic + '/actuators/alarm'))
+            time.sleep(15)
+        except KeyboardInterrupt:
+            logging.info(myAlarmActuator.client.stop())
 
