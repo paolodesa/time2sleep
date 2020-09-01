@@ -1,4 +1,6 @@
-from MyMQTT import *
+import sys
+sys.path.insert(0, "../")
+from etc.MyMQTT import *
 import json
 from datetime import datetime, timedelta
 import time
