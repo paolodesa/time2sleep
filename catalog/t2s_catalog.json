@@ -17,6 +17,22 @@
                 "temperature",
                 "humidity"
             ]
+        },
+        {
+            "actuators": [
+                "light",
+                "alarm"
+            ],
+            "ip": "127.0.0.1",
+            "name": "livingroom",
+            "port": 8080,
+            "sensors": [
+                "vibration",
+                "motion",
+                "noise",
+                "temperature",
+                "humidity"
+            ]
         }
     ],
     "last_updated": 1598947329.1836128

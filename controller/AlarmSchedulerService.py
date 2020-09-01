@@ -1,4 +1,5 @@
 from MyMQTT import *
+from etc.globalVar import CATALOG_ADDRESS
 import json
 from datetime import datetime, timedelta
 import time
@@ -114,7 +115,7 @@ if __name__ == '__main__':
 
     # -- Retrieve here the list of services and devices from the catalogue
     logging.info('Connecting to the catalogue...')
-    catalogue = requests.get('http://127.0.0.1:8082').json()
+    catalogue = requests.get(CATALOG_ADDRESS).json()
     broker_host = catalogue['broker_host']
     broker_port = catalogue['broker_port']
     devices = catalogue['devices']
