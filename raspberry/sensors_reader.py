@@ -4,10 +4,12 @@
 import sys
 sys.path.insert(0, "../")
 from etc.MyMQTT import *
+from etc.globalVar import CATALOG_ADDRESS
 import json
 from datetime import datetime
 import time
 import random
+import requests
 
 if __name__ == '__main__':
     with open('../etc/t2s_conf.json', 'r') as f:
@@ -19,8 +21,9 @@ if __name__ == '__main__':
     main_topic = network + '/' + room
 
     # FROM CATALOGUE RETRIEVE BROKER_HOST AND PORT
-    broker_host = '127.0.0.1'
-    broker_port = 1883
+    catalogue = requests.get(CATALOG_ADDRESS).json()
+    broker_host = catalogue['broker_host']
+    broker_port = catalogue['broker_port']
 
     temperature = 0
     humidity = 0
@@ -62,7 +65,7 @@ if __name__ == '__main__':
                 'timestamp': str(time_instant)
             }))
 
-            time.sleep(15)
+            time.sleep(1)
 
         except KeyboardInterrupt:
             break
