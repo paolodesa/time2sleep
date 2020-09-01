@@ -3,6 +3,7 @@
 import json
 import time
 from MyMQTT import *
+import requests
 
 
 class TSPublisher():
@@ -13,38 +14,46 @@ class TSPublisher():
 class LocalSubscriber():
     def __init__(self, clientID, broker_host, broker_port):
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
+        self.vibration = None
+        self.noise = None
+        self.motion = None
+        self.temperature = None
+        self.humidity = None
+
     def notify(self, msg_topic, msg_payload):
         payload = json.loads(msg_payload)
         if msg_topic == local_topic + '/vibration':
-            vibration = str(payload['value'])
+            self.vibration = str(payload['value'])
+
         elif msg_topic == local_topic + '/noise':
-            noise = str(payload['value'])
+            self.noise = str(payload['value'])
+
         elif msg_topic == local_topic + '/motion':
-            motion = str(payload['value'])
+            self.motion = str(payload['value'])
+
         elif msg_topic == local_topic + '/temperature':
-            temperature = str(payload['value'])
+            self.temperature = str(payload['value'])
+
         elif msg_topic == local_topic + '/humidity':
-            humidity = str(payload['value'])
-        ts_topic = 'channels/1127842/publish/AAN3J152MUTN1YYX'
-        ts_client = TSPublisher('ts', 'mqtt.thingspeak.com', 1883).client
-        ts_client.start()
-        ts_payload = 'field1=' + vibration + '&field2=' + noise + '&field3=' + motion + '&field4=' + temperature + '&field5=' + humidity
-        ts_client.myPublish(ts_topic, ts_payload)
-        ts_client.stop()
+            self.humidity = str(payload['value'])
 
 
-local_topic = 'Time2sleep/bedroom1/sensors'
-local_client = LocalSubscriber('local', '127.0.0.1', 1883).client
-local_client.start()
-local_client.mySubscribe(local_topic + '/#')
+local_topic = 'time2sleep/bedroom/sensors'
+local_client = LocalSubscriber('local', '127.0.0.1', 1883)
+local_client.client.start()
+local_client.client.mySubscribe(local_topic + '/#')
 while True:
     try:
-        time.sleep(1)
+        if (local_client.vibration != None and local_client.noise != None and local_client.motion != None and
+                local_client.temperature != None and local_client.humidity != None):
+            requests.get(f'https://api.thingspeak.com/update.json?api_key=AAN3J152MUTN1YYX'
+                         f'&field1={local_client.vibration}'
+                         f'&field2={local_client.noise}'
+                         f'&field3={local_client.motion}'
+                         f'&field4={local_client.temperature}'
+                         f'&field5={local_client.humidity}')
+
+        time.sleep(15)
     except KeyboardInterrupt:
         local_client.stop()
         exit()
-    
-
-        
-
-
