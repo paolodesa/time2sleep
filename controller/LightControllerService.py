@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, "../")
 from etc.MyMQTT import *
 from etc.globalVar import CATALOG_ADDRESS
 import json

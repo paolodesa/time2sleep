@@ -31,7 +31,7 @@ if __name__ == '__main__':
     motion = 0
     noise = 0
 
-    DataPublisher = MyMQTT(main_topic, broker_host, broker_port)
+    DataPublisher = MyMQTT(main_topic, broker_host, broker_port, None)
     DataPublisher.start()
 
     while True:

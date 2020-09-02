@@ -1,7 +1,9 @@
+import sys
+sys.path.insert(0, "../")
 import cherrypy
 import json
 import requests
-from MyMQTT import *
+from etc.MyMQTT import *
 
 
 class ConfigUpdatePublisher:

@@ -8,7 +8,6 @@ import time
 import requests
 import logging
 import threading
-import simpleaudio as sa
 import RPi.GPIO
 
 WINDOW = timedelta(minutes=10)
