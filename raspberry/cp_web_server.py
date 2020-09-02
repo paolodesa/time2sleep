@@ -64,4 +64,5 @@ if __name__ == '__main__':
                 'tools.sessions.on': True
             }
     }
+    cherrypy.config.update({'server.socket_host': '0.0.0.0'})
     cherrypy.quickstart(SimpleService(), '/', conf)

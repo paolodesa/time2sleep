@@ -59,31 +59,6 @@ class AlarmActuatorService:
                      self.alarm_time, self.alarm_set)
 
 
-def runAlarmActuator(myAlarmActuator):
-        logging.info(myAlarmActuator.client.mySubscribe(myAlarmActuator.main_topic + '/config_updates'))
-        
-        while True:
-            try:
-                if myAlarmActuator.alarm_time and myAlarmActuator.alarm_set:
-                    if myAlarmActuator.alarm_time-WINDOW <= datetime.now() <= myAlarmActuator.alarm_time + WINDOW:
-                        logging.info(myAlarmActuator.client.mySubscribe(myAlarmActuator.main_topic + '/actuators/alarm'))
-
-                        while myAlarmActuator.alarm_time-WINDOW <= datetime.now() < myAlarmActuator.alarm_time+WINDOW:
-
-                            if myAlarmActuator.alarm == 1:
-                                myAlarmActuator.alarmStart()
-                                while myAlarmActuator.alarm == 1:
-                                    time.sleep(1)
-                                myAlarmActuator.alarmStop()
-                                break
-                            time.sleep(1)
-
-                        logging.info(myAlarmActuator.client.myUnsubscribe(myAlarmActuator.main_topic + '/actuators/alarm'))
-                time.sleep(15)
-            except KeyboardInterrupt:
-                logging.info(myAlarmActuator.client.stop())
-
-
 if __name__ == '__main__':
 
     logging.basicConfig(filename='../logs/alarm_actuator_service.log', filemode='w', level=logging.DEBUG,
@@ -119,7 +94,8 @@ if __name__ == '__main__':
                         if myAlarmActuator.alarm == 1:
                             myAlarmActuator.alarmStart()
                             while myAlarmActuator.alarm == 1:
-                                time.sleep(1)
+                                if not myAlarmActuator.play_obj.is_playing():
+                                    myAlarmActuator.play_obj = myAlarmActuator.wave_obj.play()
                             myAlarmActuator.alarmStop()
                             break
                         time.sleep(1)
