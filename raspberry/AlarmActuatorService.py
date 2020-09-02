@@ -105,6 +105,7 @@ if __name__ == '__main__':
             f.close()
     myAlarmActuator = AlarmActuatorService('AlarmActuatorService_' + config_dict['room_name'], broker_host, broker_port)
     
+    logging.info(myAlarmActuator.client.start())
     logging.info(myAlarmActuator.client.mySubscribe(myAlarmActuator.main_topic + '/config_updates'))
         
     while True:

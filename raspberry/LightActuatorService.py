@@ -73,6 +73,7 @@ if __name__ == '__main__':
     # Instantiate and start the light actuators
     with open('../etc/t2s_conf.json', 'r') as f:
             config_dict = json.load(f)
+            f.close()
 
     logging.info('Instantiating the actuator')
     myLightActuator = LightActuatorService('LightActuatorService_' + config_dict['room_name'], broker_host, broker_port)
