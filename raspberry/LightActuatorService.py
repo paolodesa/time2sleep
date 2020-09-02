@@ -23,6 +23,7 @@ class LightActuatorService:
         self.alarm_time = 0
         self.last_update = ''
         self.main_topic = ''
+        self.light = 0
 
         self.updateConfig()
 
