@@ -8,7 +8,6 @@ import time
 import requests
 import logging
 import threading
-import simpleaudio as sa
 import RPi.GPIO
 
 WINDOW = timedelta(minutes=10)
@@ -24,6 +23,7 @@ class LightActuatorService:
         self.alarm_time = 0
         self.last_update = ''
         self.main_topic = ''
+        self.light = 0
 
         self.updateConfig()
 

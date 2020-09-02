@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, "../")
 from etc.MyMQTT import *
 from etc.globalVar import CATALOG_ADDRESS
 import json
@@ -39,13 +41,13 @@ class LightControllerService:
             self.last_update = message
 
     def LightOn(self):
-        msg = json.dumps({'light': True})
+        msg = json.dumps({'value': 1})
         self.client.myPublish(self.main_topic + '/actuators/light', msg)
         self.light_on = True
         logging.debug(self.client.clientID + ': LIGHT ON')
 
     def LightOff(self):
-        msg = json.dumps({'light': False})
+        msg = json.dumps({'value': 0})
         self.client.myPublish(self.main_topic + '/actuators/light', msg)
         self.light_on = False
         logging.debug(self.client.clientID + ': LIGHT OFF')

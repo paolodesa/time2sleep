@@ -48,7 +48,7 @@ class AlarmActuatorService:
 
     def updateConfig(self):
         # -- Retrieve here the config file from the RaspBerry
-        with open('../etc/t2sconf.json', 'r') as f:
+        with open('../etc/t2s_conf.json', 'r') as f:
             config_dict = json.load(f)
             f.close()
         self.night_start = datetime.strptime(config_dict['night_start'], '%y,%m,%d,%H,%M')
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
     # Instantiate and start the alarm actuators
     logging.info('Instantiating the actuators')
-    with open('../etc/t2sconf.json', 'r') as f:
+    with open('../etc/t2s_conf.json', 'r') as f:
             config_dict = json.load(f)
             f.close()
     myAlarmActuator = AlarmActuatorService('AlarmActuatorService_' + config_dict['room_name'], broker_host, broker_port)
