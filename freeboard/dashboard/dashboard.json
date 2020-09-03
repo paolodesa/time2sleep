@@ -1,8 +1,52 @@
 {
     "allow_edit": true,
     "columns": 3,
-    "datasources": [],
-    "panes": [],
+    "datasources": [
+        {
+            "name": "Bedroom",
+            "settings": {
+                "method": "GET",
+                "refresh": 15,
+                "url": "https://api.thingspeak.com/channels/1127842/feeds.json?results=2",
+                "use_thingproxy": true
+            },
+            "type": "JSON"
+        }
+    ],
+    "panes": [
+        {
+            "col": {
+                "3": 1
+            },
+            "col_width": 1,
+            "row": {
+                "3": 1
+            },
+            "widgets": [
+                {
+                    "settings": {
+                        "animate": true,
+                        "size": "big",
+                        "title": "Temperature",
+                        "units": "\u00b0C",
+                        "value": "datasources[\"Bedroom\"][\"feeds\"][1][\"field4\"]"
+                    },
+                    "type": "text_widget"
+                },
+                {
+                    "settings": {
+                        "max_value": 100,
+                        "min_value": 0,
+                        "title": "Humidity",
+                        "units": "%",
+                        "value": "datasources[\"Bedroom\"][\"feeds\"][1][\"field5\"]"
+                    },
+                    "type": "gauge"
+                }
+            ],
+            "width": 1
+        }
+    ],
     "plugins": [],
     "version": 1
 }
