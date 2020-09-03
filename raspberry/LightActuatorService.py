@@ -31,6 +31,7 @@ class LightActuatorService:
         self.last_update = ''
         self.main_topic = ''
         self.light = 0
+        self.lightON = False
 
         self.updateConfig()
 
@@ -43,15 +44,19 @@ class LightActuatorService:
             self.last_update = message
 
     def lightStart(self):
-        logging.info(self.id + ': Light turned on')
-        # Give high voltage to proper GPIO
-        GPIO.output(ledPin, GPIO.HIGH)
-        time.sleep(3)
+        if not self.lightON:
+            logging.info(self.id + ': Light turned on')
+            # Give high voltage to proper GPIO
+            GPIO.output(ledPin, GPIO.HIGH)
+            self.lightON = True
+            time.sleep(3)
 
     def lightStop(self):
-        logging.info(self.id + ': Light turned off')
-        # Give love voltage to proper GPIO
-        GPIO.output(ledPin, GPIO.LOW)
+        if self.lightON:
+            logging.info(self.id + ': Light turned off')
+            # Give low voltage to proper GPIO
+            GPIO.output(ledPin, GPIO.LOW)
+            self.lightON = False
 
     def updateConfig(self):
         # -- Retrieve here the config file from the RaspBerry
