@@ -10,8 +10,29 @@ from datetime import datetime
 import time
 import random
 import requests
+import RPi.GPIO as GPIO
+import etc.Freenove_DHT as DHT
+import pyaudio
+import numpy as np
+
+CHUNK = 2**11
+RATE = 44100
+
+motionSensorPin = 11
+DHTPin = 7
+
+def setup():
+    print('Sensors are starting')
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(motionSensorPin, GPIO.IN)
 
 if __name__ == '__main__':
+    setup()
+    dht = DHT.DHT(DHTPin)
+    p=pyaudio.PyAudio()
+    stream=p.open(format=pyaudio.paInt16,channels=1,rate=RATE,input=True,
+              frames_per_buffer=CHUNK)
+
     with open('../etc/t2s_conf.json', 'r') as f:
         t2s_conf = json.load(f)
         network = t2s_conf['network_name']
@@ -36,11 +57,25 @@ if __name__ == '__main__':
 
     while True:
         try:
-            temperature = random.randint(10, 30)
-            humidity = random.randint(50, 90)
+            # temperature = random.randint(10, 30)
+            # humidity = random.randint(50, 90)
             vibration = random.randint(0, 100)
-            motion = random.randint(0, 1)
-            noise = random.randint(20, 90)
+            # motion = random.randint(0, 1)
+            # noise = random.randint(20, 90)
+
+            if GPIO.input(motionSensorPin) == GPIO.HIGH:
+                motion = 1
+            else:
+                motion = 0
+
+            chk = dht.readDHT11()
+            if chk is dht.DHTLIB_OK:
+                temperature = dht.temperature
+                humidity = dht.humidity
+
+            data = np.fromstring(stream.read(CHUNK,exception_on_overflow=False),dtype=np.int16)
+            peak = np.average(np.abs(data))*2
+            noise = peak
 
             # Publishing Data
             time_instant = datetime.now()
@@ -69,3 +104,9 @@ if __name__ == '__main__':
 
         except KeyboardInterrupt:
             break
+    
+    GPIO.cleanup()
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()

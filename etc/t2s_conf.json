@@ -1,8 +1,8 @@
 {
     "alarm_set": false,
-    "alarm_time": "20,09,03,18,10",
+    "alarm_time": "20,09,03,11,30",
     "light_set": true,
     "network_name": "time2sleep",
-    "night_start": "20,09,02,09,30",
+    "night_start": "20,09,03,10,30",
     "room_name": "bedroom"
 }
