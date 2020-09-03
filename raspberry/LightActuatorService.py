@@ -8,9 +8,16 @@ import time
 import requests
 import logging
 import threading
-import RPi.GPIO
+import RPi.GPIO as GPIO
 
 WINDOW = timedelta(minutes=10)
+
+ledPin = 12
+
+def setup():
+    print('GPIO pins setup running...')
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(ledPin, GPIO.OUT)
 
 class LightActuatorService:
     def __init__(self, clientID, broker_host, broker_port):
@@ -38,10 +45,12 @@ class LightActuatorService:
     def lightStart(self):
         logging.info(self.id + ': Light turned on')
         # Give high voltage to proper GPIO
+        GPIO.output(ledPin, GPIO.HIGH)
 
     def lightStop(self):
         logging.info(self.id + ': Light turned off')
         # Give love voltage to proper GPIO
+        GPIO.output(ledPin, GPIO.LOW)
 
     def updateConfig(self):
         # -- Retrieve here the config file from the RaspBerry
@@ -95,3 +104,4 @@ if __name__ == '__main__':
 
         except KeyboardInterrupt:
             logging.info(myLightActuator.client.stop())
+            GPIO.cleanup()
