@@ -49,7 +49,6 @@ class LightActuatorService:
             # Give high voltage to proper GPIO
             GPIO.output(ledPin, GPIO.HIGH)
             self.lightON = True
-            time.sleep(3)
 
     def lightStop(self):
         if self.lightON:
