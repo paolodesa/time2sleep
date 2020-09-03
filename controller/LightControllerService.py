@@ -7,6 +7,7 @@ from datetime import datetime
 import requests
 import logging
 import threading
+import time
 
 # The new idea is that of creating an instance of LightControllerService per room, and let it manage
 # that room autonomously. Therefore all the logic is moved inside the notify method.
@@ -74,11 +75,14 @@ def runLightController(myLightController):
 
                 while (myLightController.night_start <= datetime.now() <= myLightController.alarm_time) and myLightController.light_set:
                     if not myLightController.light_on:
+                        ctr = 0
                         if myLightController.sensor_motion >= THRESHOLD:
                             myLightController.LightOn()
-                    else:
+                    elif ctr >= 5:
                         if myLightController.sensor_motion < THRESHOLD:
                             myLightController.LightOff()
+                    time.sleep(1)
+                    ctr += 1
 
                 logging.info(myLightController.client.myUnsubscribe(myLightController.main_topic + '/sensors/motion'))
 
