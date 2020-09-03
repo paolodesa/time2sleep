@@ -51,8 +51,8 @@ class AlarmActuatorService:
         with open('../etc/t2s_conf.json', 'r') as f:
             config_dict = json.load(f)
             f.close()
-        self.night_start = datetime.strptime(config_dict['night_start'], '%y,%m,%d,%H,%M')
-        self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%y,%m,%d,%H,%M')
+        self.night_start = datetime.strptime(config_dict['night_start'], '%Y,%m,%d,%H,%M')
+        self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%Y,%m,%d,%H,%M')
         self.alarm_set = config_dict['alarm_set']
         self.main_topic = config_dict['network_name'] + '/' + config_dict['room_name']
         logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s, alarm_set: %s', self.night_start,

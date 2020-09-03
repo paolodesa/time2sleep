@@ -68,8 +68,8 @@ class SleepStateService:
         # -- Retrieve here the config file from the RaspBerry
         r = requests.get(self.rb_url)
         config_dict = r.json()
-        self.night_start = datetime.strptime(config_dict['night_start'], '%y,%m,%d,%H,%M')
-        self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%y,%m,%d,%H,%M')
+        self.night_start = datetime.strptime(config_dict['night_start'], '%Y,%m,%d,%H,%M')
+        self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%Y,%m,%d,%H,%M')
         self.main_topic = config_dict['network_name'] + '/' + config_dict['room_name']
         self.alarm_set = config_dict['alarm_set']
         logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s, alarm_set: %s', self.night_start,

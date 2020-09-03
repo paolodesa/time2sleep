@@ -58,8 +58,8 @@ class AlarmSchedulerService:
         self.sleep_state = 'awake'
         msg = json.dumps({'sleep_state': 'awake'})
         self.client.myPublish(self.main_topic + '/sleep_state', msg)
-        new_night_start = datetime.strftime(self.night_start + timedelta(days=1), '%y,%m,%d,%H,%M')
-        new_alarm_time = datetime.strftime(self.alarm_time + timedelta(days=1), '%y,%m,%d,%H,%M')
+        new_night_start = datetime.strftime(self.night_start + timedelta(days=1), '%Y,%m,%d,%H,%M')
+        new_alarm_time = datetime.strftime(self.alarm_time + timedelta(days=1), '%Y,%m,%d,%H,%M')
         config_update = {'night_start': new_night_start, 'alarm_time': new_alarm_time, 'alarm_set': False}
         logging.info(requests.post(self.rb_url + '/changeConfig', json.dumps(config_update)))
         logging.info('alarm stopped')
@@ -68,8 +68,8 @@ class AlarmSchedulerService:
         # -- Retrieve here the config file from the RaspBerry
         r = requests.get(self.rb_url)
         config_dict = r.json()
-        self.night_start = datetime.strptime(config_dict['night_start'], '%y,%m,%d,%H,%M')
-        self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%y,%m,%d,%H,%M')
+        self.night_start = datetime.strptime(config_dict['night_start'], '%Y,%m,%d,%H,%M')
+        self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%Y,%m,%d,%H,%M')
         self.alarm_set = config_dict['alarm_set']
         self.main_topic = config_dict['network_name'] + '/' + config_dict['room_name']
         logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s, alarm_set: %s', self.night_start,
