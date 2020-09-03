@@ -46,6 +46,7 @@ class LightActuatorService:
         logging.info(self.id + ': Light turned on')
         # Give high voltage to proper GPIO
         GPIO.output(ledPin, GPIO.HIGH)
+        time.sleep(3)
 
     def lightStop(self):
         logging.info(self.id + ': Light turned off')
@@ -92,15 +93,16 @@ if __name__ == '__main__':
         
     while True:
         try:
-            while myLightActuator.night_start <= datetime.now() <= myLightActuator.alarm_time + WINDOW:
-                if myLightActuator.light_set:
-                    logging.info(myLightActuator.client.mySubscribe(myLightActuator.main_topic + '/actuators/light'))
-                    if myLightActuator.light == 1:
-                        myLightActuator.lightStart()
-                    else:
-                        myLightActuator.lightStop()
-
-            logging.info(myLightActuator.client.myUnsubscribe(myLightActuator.main_topic + '/actuators'))
+            if myLightActuator.night_start <= datetime.now() <= myLightActuator.alarm_time + WINDOW:
+                logging.info(myLightActuator.client.mySubscribe(myLightActuator.main_topic + '/actuators/light'))
+                while myLightActuator.night_start <= datetime.now() <= myLightActuator.alarm_time + WINDOW:
+                    if myLightActuator.light_set:
+                        if myLightActuator.light == 1:
+                            myLightActuator.lightStart()
+                        else:
+                            myLightActuator.lightStop()
+                logging.info(myLightActuator.client.myUnsubscribe(myLightActuator.main_topic + '/actuators'))
+            time.sleep(15)
 
         except KeyboardInterrupt:
             logging.info(myLightActuator.client.stop())
