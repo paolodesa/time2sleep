@@ -68,7 +68,7 @@ class LightActuatorService:
 
 
 if __name__ == '__main__':
-
+    setup()
     logging.basicConfig(filename='../logs/light_actuator_service.log', filemode='w', level=logging.DEBUG,
                         format='%(asctime)s-%(levelname)s: %(message)s', datefmt='%H:%M:%S')
 
