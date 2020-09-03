@@ -85,7 +85,6 @@ def runLightController(myLightController):
                                 myLightController.LightOff()
                     time.sleep(1)
 
-                myLightController.LightOff()
                 logging.info(myLightController.client.myUnsubscribe(myLightController.main_topic + '/sensors/motion'))
 
     except KeyboardInterrupt:

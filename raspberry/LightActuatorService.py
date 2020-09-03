@@ -105,6 +105,7 @@ if __name__ == '__main__':
                             myLightActuator.lightStart()
                         else:
                             myLightActuator.lightStop()
+                myLightActuator.lightStop()
                 logging.info(myLightActuator.client.myUnsubscribe(myLightActuator.main_topic + '/actuators'))
             time.sleep(15)
 
