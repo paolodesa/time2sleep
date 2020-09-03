@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-
+import sys
+sys.path.insert(0, "../")
+from etc.MyMQTT import *
 import json
 import time
-from MyMQTT import *
 import requests
-
-
-class TSPublisher():
-    def __init__(self, clientID, broker_host, broker_port):
-        self.client = MyMQTT(clientID, broker_host, broker_port, self)
 
 
 class LocalSubscriber():
@@ -55,5 +51,5 @@ while True:
 
         time.sleep(15)
     except KeyboardInterrupt:
-        local_client.stop()
+        local_client.client.stop()
         exit()
