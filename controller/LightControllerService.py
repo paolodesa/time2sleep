@@ -78,12 +78,14 @@ def runLightController(myLightController):
                         ctr = 0
                         if myLightController.sensor_motion >= THRESHOLD:
                             myLightController.LightOn()
-                    elif ctr >= 5:
+                    else:
                         if myLightController.sensor_motion < THRESHOLD:
-                            myLightController.LightOff()
+                            ctr += 1
+                            if ctr > 5:
+                                myLightController.LightOff()
                     time.sleep(1)
-                    ctr += 1
 
+                myLightController.LightOff()
                 logging.info(myLightController.client.myUnsubscribe(myLightController.main_topic + '/sensors/motion'))
 
     except KeyboardInterrupt:
