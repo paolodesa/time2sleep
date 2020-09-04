@@ -20,7 +20,7 @@
                         freeboard.initialize(true);
                         freeboard.setEditing(false);
                         // Load default dashboard configuration
-                        $.ajax("/static/dashboard/dashboard.json", {
+                        $.ajax("/dashboard/dashboard.json", {
                             'async': true,
                             'method': 'get',
                             'success': function(data, status, xhr) {

@@ -42,13 +42,16 @@ while True:
     try:
         if (local_client.vibration != None and local_client.noise != None and local_client.motion != None and
                 local_client.temperature != None and local_client.humidity != None):
-            requests.get(f'https://api.thingspeak.com/update.json?api_key=AAN3J152MUTN1YYX'
-                         f'&field1={local_client.vibration}'
-                         f'&field2={local_client.noise}'
-                         f'&field3={local_client.motion}'
-                         f'&field4={local_client.temperature}'
-                         f'&field5={local_client.humidity}')
-
+            try:
+                requests.get(f'https://api.thingspeak.com/update.json?api_key=AAN3J152MUTN1YYX'
+                            f'&field1={local_client.vibration}'
+                            f'&field2={local_client.noise}'
+                            f'&field3={local_client.motion}'
+                            f'&field4={local_client.temperature}'
+                            f'&field5={local_client.humidity}')
+            except requests.ConnectionError:
+                time.sleep(5)
+                continue
         time.sleep(15)
     except KeyboardInterrupt:
         local_client.client.stop()
