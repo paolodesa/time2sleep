@@ -34,7 +34,7 @@ class LocalSubscriber():
             self.humidity = str(payload['value'])
 
 
-local_topic = 'time2sleep/bedroom/sensors'
+local_topic = 'time2sleep/Bedroom/sensors'
 local_client = LocalSubscriber('local', '127.0.0.1', 1883)
 local_client.client.start()
 local_client.client.mySubscribe(local_topic + '/#')
