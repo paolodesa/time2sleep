@@ -3,6 +3,8 @@ sys.path.insert(0, "../")
 import cherrypy
 import json
 import requests
+import time
+import socket
 from etc.MyMQTT import *
 
 
@@ -55,8 +57,29 @@ class SimpleService(object):
             except KeyError:
                 raise cherrypy.HTTPError(404, 'The configuration file was not found')
 
+    def get_ip_address(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+
+    def pingCatalog(self):
+        catalog_host = '127.0.0.1'
+        catalog_port = 1883
+        url = f'http://{catalog_host}:{catalog_port}/addDevice'
+        ip = self.get_ip_address()
+        port = 8080
+        with open('../etc/t2s_conf.json', 'r') as f:
+            conf = json.load(f)
+            f.close()
+        name = conf['room_name']
+        sensors = ['vibration', 'motion', 'noise', 'temperature', 'humidity']
+        actuators = ['light', 'alarm']
+        body = {'ip': ip, 'port': port, 'name': name, 'sensors': sensors, 'actuators': actuators, 'last_seen': time.time()}
+        requests.post(url, json.dumps(body))
+
 
 if __name__ == '__main__':
+    s = SimpleService()
     conf = {
         '/':
             {
@@ -65,4 +88,12 @@ if __name__ == '__main__':
             }
     }
     cherrypy.config.update({'server.socket_host': '0.0.0.0'})
-    cherrypy.quickstart(SimpleService(), '/', conf)
+    cherrypy.quickstart(s, '/', conf)
+    
+    while True:
+        try:
+            s.pingCatalog()
+            time.sleep(10)
+        except KeyboardInterrupt:
+            cherrypy.engine.exit()
+
