@@ -64,7 +64,7 @@ class SimpleService(object):
 
     def pingCatalog(self):
         catalog_host = '127.0.0.1'
-        catalog_port = 1883
+        catalog_port = 8082
         url = f'http://{catalog_host}:{catalog_port}/addDevice'
         ip = self.get_ip_address()
         port = 8080
@@ -88,7 +88,8 @@ if __name__ == '__main__':
             }
     }
     cherrypy.config.update({'server.socket_host': '0.0.0.0'})
-    cherrypy.quickstart(s, '/', conf)
+    cherrypy.tree.mount(s,'/',conf)
+    cherrypy.engine.start()
     
     while True:
         try:

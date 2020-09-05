@@ -83,7 +83,7 @@ class ServiceCatalog(object):
         with open('t2s_catalog.json', 'r+') as f:
             t2s_catalog = json.load(f)
             for d in t2s_catalog['devices']:
-                if time.time() - d['last_update'] > 10:
+                if time.time() - d['last_seen'] > 10:
                     t2s_catalog['devices'].pop(t2s_catalog['devices'].index(d))
                     t2s_catalog['last_updated'] = time.time()
                     removingDev = True
@@ -106,7 +106,8 @@ if __name__ == '__main__':
             }
     }
     cherrypy.config.update({'server.socket_host': '0.0.0.0', 'server.socket_port': 8082})
-    cherrypy.quickstart(catalog, '/', conf)
+    cherrypy.tree.mount(catalog,'/',conf)
+    cherrypy.engine.start()
 
     while True:
         try:
