@@ -56,6 +56,31 @@ class SimpleService(object):
                     return 'Configuration file successfully written and published to broker'
             except KeyError:
                 raise cherrypy.HTTPError(404, 'The configuration file was not found')
+        elif len(uri) == 1 and uri[0] == 'toggleLight':
+            try:
+                with open('../etc/t2s_conf.json', 'r+') as f:
+                    t2s_conf = json.load(f)
+                    config_update = json.loads(cherrypy.request.body.read())
+                    try:
+                        light_set = config_update['light_set']
+                    except KeyError:
+                        f.close()
+                        raise cherrypy.HTTPError(400, 'One of the keys is missing')
+                    t2s_conf['light_set'] = light_set
+                    f.seek(0)
+                    f.write(json.dumps(t2s_conf, indent=4, sort_keys=True))
+                    f.truncate()
+                    f.close()
+                    catalogue = requests.get('http://127.0.0.1:8082').json()
+                    broker_host = catalogue['broker_host']
+                    broker_port = catalogue['broker_port']
+                    myConfigUpdatePublisher = ConfigUpdatePublisher('ConfigUpdatePublisher', broker_host, broker_port)
+                    myConfigUpdatePublisher.client.start()
+                    myConfigUpdatePublisher.client.myPublish(f'{t2s_conf["network_name"]}/{t2s_conf["room_name"]}/config_updates', json.dumps(t2s_conf))
+                    myConfigUpdatePublisher.client.stop()
+                    return 'Configuration file successfully written and published to broker'
+            except KeyError:
+                raise cherrypy.HTTPError(404, 'The configuration file was not found')
 
     def get_ip_address(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
