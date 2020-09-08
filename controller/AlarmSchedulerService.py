@@ -89,28 +89,29 @@ class AlarmSchedulerService:
 
 
 def checkNewDevices():
-    global DEVICES
-    new_rooms = []
-    ids = []
-    catalogue = requests.get(CATALOG_ADDRESS).json()
-    broker_host = catalogue['broker_host']
-    broker_port = catalogue['broker_port']
-    devices = catalogue['devices']
-    for DEV in DEVICES:
-        ids.append(DEV['id'])
-    for dev in devices:
-        if dev['id'] not in ids and 'motion' in dev["sensors"] and 'alarm' in dev["actuators"]:
-            url = f'http://{dev["ip"]}:{dev["port"]}'
-            id = 'AlarmSchedulerService_' + dev["name"]
-            new_rooms.append(AlarmSchedulerService(id, url, broker_host, broker_port))
-            logging.info(new_rooms[-1].client.start())
-    DEVICES = devices
-    newRoomThreads = list()
-    for room in new_rooms:
-        newRoomThreads.append(threading.Thread(target=runAlarmScheduler, args=(room,)))
-    for roomThread in newRoomThreads:
-        roomThread.start()
-    time.sleep(5)
+    while True:
+        global DEVICES
+        new_rooms = []
+        ids = []
+        catalogue = requests.get(CATALOG_ADDRESS).json()
+        broker_host = catalogue['broker_host']
+        broker_port = catalogue['broker_port']
+        devices = catalogue['devices']
+        for DEV in DEVICES:
+            ids.append(DEV['id'])
+        for dev in devices:
+            if dev['id'] not in ids and 'motion' in dev["sensors"] and 'alarm' in dev["actuators"]:
+                url = f'http://{dev["ip"]}:{dev["port"]}'
+                id = 'AlarmSchedulerService_' + dev["name"]
+                new_rooms.append(AlarmSchedulerService(id, url, broker_host, broker_port))
+                logging.info(new_rooms[-1].client.start())
+        DEVICES = devices
+        newRoomThreads = list()
+        for room in new_rooms:
+            newRoomThreads.append(threading.Thread(target=runAlarmScheduler, args=(room,)))
+        for roomThread in newRoomThreads:
+            roomThread.start()
+        time.sleep(5)
 
 
 def runAlarmScheduler(myAlarmScheduler):
