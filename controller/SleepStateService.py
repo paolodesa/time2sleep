@@ -17,10 +17,10 @@ WINDOW = timedelta(minutes=10)
 DEVICES = []
 
 class SleepStateService:
-    def __init__(self, clientID, rb_url, broker_host, broker_port):
+    def __init__(self, clientID, room_name, rb_url, broker_host, broker_port):
 
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
-        self.id = clientID
+        self.id = room_name
         self.sensor_motion = 0
         self.sensor_noise = 0
         self.sensor_vibration = 0
@@ -81,7 +81,7 @@ class SleepStateService:
         global DEVICES
         ids = []
         for DEV in DEVICES:
-            ids.append(DEV['id'])
+            ids.append(DEV['name'])
         if self.id in ids:
             return True
         else:
@@ -98,12 +98,13 @@ def checkNewDevices():
         broker_port = catalogue['broker_port']
         devices = catalogue['devices']
         for DEV in DEVICES:
-            ids.append(DEV['id'])
+            ids.append(DEV['name'])
         for dev in devices:
-            if dev['id'] not in ids and 'motion' in dev["sensors"] and 'noise' in dev["sensors"] and 'vibration' in dev["sensors"]:
+            if dev['name'] not in ids and 'motion' in dev["sensors"] and 'noise' in dev["sensors"] and 'vibration' in dev["sensors"]:
                 url = f'http://{dev["ip"]}:{dev["port"]}'
                 id = 'SleepEvalService_' + dev["name"]
-                new_rooms.append(SleepStateService(id, url, broker_host, broker_port))
+                room_name = dev['name']
+                new_rooms.append(SleepStateService(id, room_name, url, broker_host, broker_port))
                 logging.info(new_rooms[-1].client.start())
         DEVICES = devices
         newRoomThreads = list()
@@ -165,7 +166,8 @@ if __name__ == '__main__':
         if 'motion' in dev["sensors"] and 'noise' in dev["sensors"] and 'vibration' in dev["sensors"]:
             url = f'http://{dev["ip"]}:{dev["port"]}'
             id = 'SleepEvalService_' + dev["name"] + str(i)
-            rooms.append(SleepStateService(id, url, broker_host, broker_port))
+            room_name = dev['name']
+            rooms.append(SleepStateService(id, room_name, url, broker_host, broker_port))
             logging.info(rooms[-1].client.start())
             i += 1
 

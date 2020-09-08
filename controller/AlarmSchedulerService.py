@@ -16,10 +16,10 @@ WINDOW = timedelta(minutes=10)
 DEVICES = []
 
 class AlarmSchedulerService:
-    def __init__(self, clientID, rb_url, broker_host, broker_port):
+    def __init__(self, clientID, room_name, rb_url, broker_host, broker_port):
 
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
-        self.id = clientID
+        self.id = room_name
         self.sensor_motion = 0
         self.alarm = 0
         self.sleep_state = ''
@@ -81,7 +81,7 @@ class AlarmSchedulerService:
         global DEVICES
         ids = []
         for DEV in DEVICES:
-            ids.append(DEV['id'])
+            ids.append(DEV['name'])
         if self.id in ids:
             return True
         else:
@@ -98,12 +98,13 @@ def checkNewDevices():
         broker_port = catalogue['broker_port']
         devices = catalogue['devices']
         for DEV in DEVICES:
-            ids.append(DEV['id'])
+            ids.append(DEV['name'])
         for dev in devices:
-            if dev['id'] not in ids and 'motion' in dev["sensors"] and 'alarm' in dev["actuators"]:
+            if dev['name'] not in ids and 'motion' in dev["sensors"] and 'alarm' in dev["actuators"]:
                 url = f'http://{dev["ip"]}:{dev["port"]}'
                 id = 'AlarmSchedulerService_' + dev["name"]
-                new_rooms.append(AlarmSchedulerService(id, url, broker_host, broker_port))
+                room_name = dev['name']
+                new_rooms.append(AlarmSchedulerService(id, room_name, url, broker_host, broker_port))
                 logging.info(new_rooms[-1].client.start())
         DEVICES = devices
         newRoomThreads = list()
@@ -172,7 +173,8 @@ if __name__ == '__main__':
         if 'motion' in dev["sensors"] and 'alarm' in dev["actuators"]:
             url = f'http://{dev["ip"]}:{dev["port"]}'
             id = 'AlarmSchedulerService_' + dev["name"] + str(i)
-            rooms.append(AlarmSchedulerService(id, url, broker_host, broker_port))
+            room_name = dev['name']
+            rooms.append(AlarmSchedulerService(id, room_name, url, broker_host, broker_port))
             logging.info(rooms[-1].client.start())
             i += 1
 
