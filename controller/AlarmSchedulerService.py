@@ -13,11 +13,13 @@ import threading
 # that room autonomously. Therefore all the logic is moved inside the notify method.
 
 WINDOW = timedelta(minutes=10)
+DEVICES = []
 
 class AlarmSchedulerService:
     def __init__(self, clientID, rb_url, broker_host, broker_port):
 
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
+        self.id = clientID
         self.sensor_motion = 0
         self.alarm = 0
         self.sleep_state = ''
@@ -75,11 +77,46 @@ class AlarmSchedulerService:
         logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s, alarm_set: %s', self.night_start,
                      self.alarm_time, self.alarm_set)
 
+    def isActive(self):
+        global DEVICES
+        ids = []
+        for DEV in DEVICES:
+            ids.append(DEV['id'])
+        if self.id in ids:
+            return True
+        else:
+            return False
+
+
+def checkNewDevices():
+    global DEVICES
+    new_rooms = []
+    ids = []
+    catalogue = requests.get(CATALOG_ADDRESS).json()
+    broker_host = catalogue['broker_host']
+    broker_port = catalogue['broker_port']
+    devices = catalogue['devices']
+    for DEV in DEVICES:
+        ids.append(DEV['id'])
+    for dev in devices:
+        if dev['id'] not in ids and 'motion' in dev["sensors"] and 'alarm' in dev["actuators"]:
+            url = f'http://{dev["ip"]}:{dev["port"]}'
+            id = 'AlarmSchedulerService_' + dev["name"]
+            new_rooms.append(AlarmSchedulerService(id, url, broker_host, broker_port))
+            logging.info(new_rooms[-1].client.start())
+    DEVICES = devices
+    newRoomThreads = list()
+    for room in new_rooms:
+        newRoomThreads.append(threading.Thread(target=runAlarmScheduler, args=(room,)))
+    for roomThread in newRoomThreads:
+        roomThread.start()
+    time.sleep(5)
+
 
 def runAlarmScheduler(myAlarmScheduler):
         logging.info(myAlarmScheduler.client.mySubscribe(myAlarmScheduler.main_topic + '/config_updates'))
         
-        while True:
+        while myAlarmScheduler.isActive():
             try:
                 if myAlarmScheduler.alarm_time and myAlarmScheduler.alarm_set:
                     # Subscribe to motion sensor topic during the night
@@ -88,7 +125,7 @@ def runAlarmScheduler(myAlarmScheduler):
                         logging.info(myAlarmScheduler.client.mySubscribe(myAlarmScheduler.main_topic + '/sleep_state'))
                         inactivity_counter = 0
 
-                        while myAlarmScheduler.alarm_time-WINDOW <= datetime.now() < myAlarmScheduler.alarm_time+WINDOW:
+                        while myAlarmScheduler.alarm_time-WINDOW <= datetime.now() < myAlarmScheduler.alarm_time+WINDOW and myAlarmScheduler.isActive():
                             if (myAlarmScheduler.alarm == 0 and myAlarmScheduler.sleep_state == 'light') or datetime.now() >= myAlarmScheduler.alarm_time+WINDOW-timedelta(minutes=1):
                                 myAlarmScheduler.alarmStart()
 
@@ -107,6 +144,8 @@ def runAlarmScheduler(myAlarmScheduler):
             except KeyboardInterrupt:
                 logging.info(myAlarmScheduler.client.stop())
 
+        logging.info(myAlarmScheduler.client.stop())
+
 
 if __name__ == '__main__':
 
@@ -121,6 +160,7 @@ if __name__ == '__main__':
     broker_host = catalogue['broker_host']
     broker_port = catalogue['broker_port']
     devices = catalogue['devices']
+    DEVICES = devices
 
     # Instantiate and start the alarm scheduler
     logging.info('Instantiating the schedulers')
@@ -156,3 +196,6 @@ if __name__ == '__main__':
 
     for roomThread in roomThreads:
         roomThread.start()
+
+    checkNewDevicesThread = threading.Thread(target=checkNewDevices)
+    checkNewDevicesThread.start()
