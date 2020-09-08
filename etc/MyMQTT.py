@@ -63,7 +63,7 @@ class MyMQTT:
     def stop(self):
         if self._isSubscriber:
             # remember to unsuscribe if it is working also as subscriber 
-            self._paho_mqtt.unsubscribe_all()
+            self.unsubscribe_all()
 
         self._paho_mqtt.loop_stop()
         self._paho_mqtt.disconnect()

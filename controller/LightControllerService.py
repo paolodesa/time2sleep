@@ -145,6 +145,7 @@ if __name__ == '__main__':
     broker_host = catalogue['broker_host']
     broker_port = catalogue['broker_port']
     devices = catalogue['devices']
+    DEVICES = devices
 
     # Instantiate and start the light controller
     logging.info('Instantiating the controllers')
