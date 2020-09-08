@@ -59,7 +59,7 @@ if __name__ == '__main__':
         try:
             # temperature = random.randint(10, 30)
             # humidity = random.randint(50, 90)
-            vibration = random.randint(0, 100)
+            vibration = random.randint(0, 1)
             # motion = random.randint(0, 1)
             # noise = random.randint(20, 90)
 

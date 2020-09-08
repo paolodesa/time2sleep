@@ -12,7 +12,7 @@ import threading
 # The new idea is that of creating an instance of SleepStateService per room, and let it manage
 # that room autonomously. Therefore all the logic is moved inside the notify method.
 
-THRESHOLD = 50
+THRESHOLD = 6
 WINDOW = timedelta(minutes=10)
 DEVICES = []
 
