@@ -13,12 +13,14 @@ import time
 # that room autonomously. Therefore all the logic is moved inside the notify method.
 
 THRESHOLD = 1
+DEVICES = []
 
 
 class LightControllerService:
     def __init__(self, clientID, rb_url, broker_host, broker_port):
 
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
+        self.id = clientID
         self.rb_url = rb_url
         self.night_start = 0
         self.alarm_time = 0
@@ -61,6 +63,42 @@ class LightControllerService:
         self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%Y,%m,%d,%H,%M')
         self.main_topic = config_dict['network_name'] + '/' + config_dict['room_name']
         logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s', self.night_start, self.alarm_time)
+    
+    def isActive(self):
+        global DEVICES
+        ids = []
+        for DEV in DEVICES:
+            ids.append(DEV['id'])
+        if self.id in ids:
+            return True
+        else:
+            return False
+
+
+def checkNewDevices():
+    while True:
+        global DEVICES
+        new_rooms = []
+        ids = []
+        catalogue = requests.get(CATALOG_ADDRESS).json()
+        broker_host = catalogue['broker_host']
+        broker_port = catalogue['broker_port']
+        devices = catalogue['devices']
+        for DEV in DEVICES:
+            ids.append(DEV['id'])
+        for dev in devices:
+            if dev['id'] not in ids and 'motion' in dev["sensors"] and 'light' in dev["actuators"]:
+                url = f'http://{dev["ip"]}:{dev["port"]}'
+                id = 'LightControllerService_' + dev["name"]
+                new_rooms.append(LightControllerService(id, url, broker_host, broker_port))
+                logging.info(new_rooms[-1].client.start())
+        DEVICES = devices
+        newRoomThreads = list()
+        for room in new_rooms:
+            newRoomThreads.append(threading.Thread(target=runLightController, args=(room,)))
+        for roomThread in newRoomThreads:
+            roomThread.start()
+        time.sleep(5)
 
 
 def runLightController(myLightController):
@@ -68,12 +106,12 @@ def runLightController(myLightController):
     logging.info(myLightController.client.mySubscribe(myLightController.main_topic + '/config_updates'))
 
     try:
-        while True:
+        while myLightController.isActive():
             # Subscribe to motion sensor topic during the night
             if (myLightController.night_start <= datetime.now() <= myLightController.alarm_time) and myLightController.light_set:
                 logging.info(myLightController.client.mySubscribe(myLightController.main_topic + '/sensors/motion'))
 
-                while (myLightController.night_start <= datetime.now() <= myLightController.alarm_time) and myLightController.light_set:
+                while (myLightController.night_start <= datetime.now() <= myLightController.alarm_time) and myLightController.light_set and myLightController.isActive():
                     if not myLightController.light_on:
                         ctr = 0
                         if myLightController.sensor_motion >= THRESHOLD:
@@ -89,6 +127,8 @@ def runLightController(myLightController):
 
     except KeyboardInterrupt:
         logging.info(myLightController.client.stop())
+
+    logging.info(myLightController.client.stop())
 
 
 if __name__ == '__main__':
@@ -122,3 +162,5 @@ if __name__ == '__main__':
     for roomThread in roomThreads:
         roomThread.start()
 
+    checkNewDevicesThread = threading.Thread(target=checkNewDevices)
+    checkNewDevicesThread.start()

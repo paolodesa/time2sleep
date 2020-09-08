@@ -14,11 +14,13 @@ import threading
 
 THRESHOLD = 50
 WINDOW = timedelta(minutes=10)
+DEVICES = []
 
 class SleepStateService:
     def __init__(self, clientID, rb_url, broker_host, broker_port):
 
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
+        self.id = clientID
         self.sensor_motion = 0
         self.sensor_noise = 0
         self.sensor_vibration = 0
@@ -75,11 +77,47 @@ class SleepStateService:
         logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s, alarm_set: %s', self.night_start,
                      self.alarm_time, self.alarm_set)
 
+    def isActive(self):
+        global DEVICES
+        ids = []
+        for DEV in DEVICES:
+            ids.append(DEV['id'])
+        if self.id in ids:
+            return True
+        else:
+            return False
+
+
+def checkNewDevices():
+    while True:
+        global DEVICES
+        new_rooms = []
+        ids = []
+        catalogue = requests.get(CATALOG_ADDRESS).json()
+        broker_host = catalogue['broker_host']
+        broker_port = catalogue['broker_port']
+        devices = catalogue['devices']
+        for DEV in DEVICES:
+            ids.append(DEV['id'])
+        for dev in devices:
+            if dev['id'] not in ids and 'motion' in dev["sensors"] and 'noise' in dev["sensors"] and 'vibration' in dev["sensors"]:
+                url = f'http://{dev["ip"]}:{dev["port"]}'
+                id = 'SleepEvalService_' + dev["name"]
+                new_rooms.append(SleepStateService(id, url, broker_host, broker_port))
+                logging.info(new_rooms[-1].client.start())
+        DEVICES = devices
+        newRoomThreads = list()
+        for room in new_rooms:
+            newRoomThreads.append(threading.Thread(target=runSleepStateEval, args=(room,)))
+        for roomThread in newRoomThreads:
+            roomThread.start()
+        time.sleep(5)
+
 
 def runSleepStateEval(mySleepStateEval):
         logging.info(mySleepStateEval.client.mySubscribe(mySleepStateEval.main_topic + '/config_updates'))
 
-        while True:
+        while mySleepStateEval.isActive():
             try:
                 if mySleepStateEval.alarm_time and mySleepStateEval.alarm_set:
                     # Subscribe to motion sensor topic during the night
@@ -87,7 +125,7 @@ def runSleepStateEval(mySleepStateEval):
                         logging.info(mySleepStateEval.client.mySubscribe(mySleepStateEval.main_topic + '/sensors/#'))
                         logging.info(mySleepStateEval.client.mySubscribe(mySleepStateEval.main_topic + '/actuators/alarm'))
 
-                        while mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time + WINDOW:
+                        while mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time + WINDOW and mySleepStateEval.isActive():
                             time.sleep(15)
                             if mySleepStateEval.alarm_set == False:
                                 break
@@ -100,6 +138,8 @@ def runSleepStateEval(mySleepStateEval):
                 time.sleep(15)
             except KeyboardInterrupt:
                 logging.info(mySleepStateEval.client.stop())
+
+        logging.info(mySleepStateEval.client.stop())
 
 
 if __name__ == '__main__':
@@ -155,3 +195,5 @@ if __name__ == '__main__':
     for roomThread in roomThreads:
         roomThread.start()
     
+    checkNewDevicesThread = threading.Thread(target=checkNewDevices)
+    checkNewDevicesThread.start()
