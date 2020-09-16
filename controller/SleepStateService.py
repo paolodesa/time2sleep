@@ -12,7 +12,7 @@ import threading
 # The new idea is that of creating an instance of SleepStateService per room, and let it manage
 # that room autonomously. Therefore all the logic is moved inside the notify method.
 
-THRESHOLD = 6
+THRESHOLD = 1
 WINDOW = timedelta(minutes=10)
 DEVICES = []
 
@@ -33,6 +33,7 @@ class SleepStateService:
         self.last_update = ''
         self.main_topic = ''
         self.alarm_stopped = False
+        self.counter = 0
 
         self.updateConfig()
 
@@ -57,10 +58,15 @@ class SleepStateService:
             self.last_update = message
 
     def evalState(self):
-        if self.sensor_motion + self.sensor_noise + self.sensor_vibration > THRESHOLD:
+        if self.sensor_motion + self.sensor_vibration >= THRESHOLD:
             self.state = 'light'
-        else:
-            self.state = 'deep'
+            self.counter = 0
+        elif self.sensor_motion + self.sensor_vibration < THRESHOLD:
+            self.counter += 1
+            if self.counter > 60:
+                self.state = 'deep'
+            else:
+                self.state = 'light'
 
         msg = json.dumps({'sleep_state': self.state})
         self.client.myPublish(self.main_topic + '/sleep_state', msg)
@@ -127,7 +133,7 @@ def runSleepStateEval(mySleepStateEval):
                         logging.info(mySleepStateEval.client.mySubscribe(mySleepStateEval.main_topic + '/actuators/alarm'))
 
                         while mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time + WINDOW and mySleepStateEval.isActive():
-                            time.sleep(15)
+                            time.sleep(1)
                             if mySleepStateEval.alarm_set == False:
                                 break
                             else:
