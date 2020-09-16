@@ -87,7 +87,7 @@ class ServiceCatalog(object):
                     t2s_catalog['devices'].pop(t2s_catalog['devices'].index(d))
                     t2s_catalog['last_updated'] = time.time()
                     removingDev = True
-            if removingDev == True:
+            if removingDev:
                 f.seek(0)
                 f.write(json.dumps(t2s_catalog, indent=4, sort_keys=True))
                 f.truncate()
@@ -106,7 +106,7 @@ if __name__ == '__main__':
             }
     }
     cherrypy.config.update({'server.socket_host': '0.0.0.0', 'server.socket_port': 8082})
-    cherrypy.tree.mount(catalog,'/',conf)
+    cherrypy.tree.mount(catalog, '/', conf)
     cherrypy.engine.start()
 
     while True:

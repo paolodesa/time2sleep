@@ -9,7 +9,7 @@ class MyMQTT:
         self.clientID = clientID
 
         self._topics = []
-        self._isSubscriber = False
+        self.isSubscriber = False
 
         # create an instance of paho.mqtt.client
         self._paho_mqtt = PahoMQTT.Client(clientID, False)
@@ -55,7 +55,7 @@ class MyMQTT:
         return self.clientID + ' started'
 
     def unsubscribe_all(self):
-        if self._isSubscriber:
+        if self.isSubscriber:
             # remember to unsuscribe if it is working also as subscriber
             for topic in self._topics:
                 self._paho_mqtt.unsubscribe(topic)

@@ -1,4 +1,5 @@
 import sys
+
 sys.path.insert(0, "../")
 from etc.MyMQTT import *
 from etc.globalVar import CATALOG_ADDRESS
@@ -15,21 +16,24 @@ import threading
 WINDOW = timedelta(minutes=10)
 DEVICES = []
 
+
 class AlarmSchedulerService:
     def __init__(self, clientID, room_name, rb_url, broker_host, broker_port):
-
+        # Private attributes
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
         self.id = room_name
-        self.sensor_motion = 0
-        self.alarm = 0
-        self.sleep_state = ''
-        self.alarm_set = False
-
         self.rb_url = rb_url
-        self.night_start = 0
+        self.main_topic = ''
+        # Subscriptions
+        self.sensor_motion = 0
+        self.sleep_state = ''
+        # Settings
+        self.alarm_set = False
+        self.adaptive_alarm = False
         self.alarm_time = 0
         self.last_update = ''
-        self.main_topic = ''
+        # Decision variable
+        self.alarm = 0
 
         self.updateConfig()
 
@@ -41,10 +45,9 @@ class AlarmSchedulerService:
         if topic == self.main_topic + '/sleep_state':
             self.sleep_state = message['sleep_state']
 
-        # TODO: if topic == self.main_topic/*/ + 'config_updates': room = topic.parse('/')[1]
         if topic == self.main_topic + '/config_updates':
             self.updateConfig()
-            self.last_update = message
+            self.last_update = message['timestamp']
 
     def alarmStart(self):
         msg = json.dumps({'value': 1})
@@ -57,25 +60,22 @@ class AlarmSchedulerService:
         msg = json.dumps({'value': 0})
         self.client.myPublish(self.main_topic + '/actuators/alarm', msg)
         self.alarm = 0
+        logging.info('alarm stopped')
+
         self.sleep_state = 'awake'
         msg = json.dumps({'sleep_state': 'awake'})
         self.client.myPublish(self.main_topic + '/sleep_state', msg)
-        new_night_start = datetime.strftime(self.night_start + timedelta(days=1), '%Y,%m,%d,%H,%M')
-        new_alarm_time = datetime.strftime(self.alarm_time + timedelta(days=1), '%Y,%m,%d,%H,%M')
-        config_update = {'night_start': new_night_start, 'alarm_time': new_alarm_time, 'alarm_set': False}
-        logging.info(requests.post(self.rb_url + '/changeConfig', json.dumps(config_update)))
-        logging.info('alarm stopped')
 
     def updateConfig(self):
         # -- Retrieve here the config file from the RaspBerry
         r = requests.get(self.rb_url)
         config_dict = r.json()
-        self.night_start = datetime.strptime(config_dict['night_start'], '%Y,%m,%d,%H,%M')
         self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%Y,%m,%d,%H,%M')
         self.alarm_set = config_dict['alarm_set']
+        self.adaptive_alarm = config_dict['adaptive_alarm']
         self.main_topic = config_dict['network_name'] + '/' + config_dict['room_name']
-        logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s, alarm_set: %s', self.night_start,
-                     self.alarm_time, self.alarm_set)
+        logging.info(self.client.clientID + ' CONFIG - alarm_time: %s, alarm_set: %s, adaptive_alarm: %s',
+                     self.alarm_time, self.alarm_set, self.adaptive_alarm)
 
     def isActive(self):
         global DEVICES
@@ -116,37 +116,31 @@ def checkNewDevices():
 
 
 def runAlarmScheduler(myAlarmScheduler):
-        logging.info(myAlarmScheduler.client.mySubscribe(myAlarmScheduler.main_topic + '/config_updates'))
-        
-        while myAlarmScheduler.isActive():
-            try:
-                if myAlarmScheduler.alarm_time and myAlarmScheduler.alarm_set:
-                    # Subscribe to motion sensor topic during the night
-                    if myAlarmScheduler.night_start <= datetime.now() <= myAlarmScheduler.alarm_time + WINDOW:
-                        logging.info(myAlarmScheduler.client.mySubscribe(myAlarmScheduler.main_topic + '/sensors/#'))
-                        logging.info(myAlarmScheduler.client.mySubscribe(myAlarmScheduler.main_topic + '/sleep_state'))
-                        inactivity_counter = 0
+    # Subscribe to config change alert topic
+    logging.info(myAlarmScheduler.client.mySubscribe(myAlarmScheduler.main_topic + '/config_updates'))
+    logging.info(myAlarmScheduler.client.mySubscribe(myAlarmScheduler.main_topic + '/sensors/motion'))
+    logging.info(myAlarmScheduler.client.mySubscribe(myAlarmScheduler.main_topic + '/sleep_state'))
 
-                        while myAlarmScheduler.alarm_time-WINDOW <= datetime.now() < myAlarmScheduler.alarm_time+WINDOW and myAlarmScheduler.isActive():
-                            if (myAlarmScheduler.alarm == 0 and myAlarmScheduler.sleep_state == 'light') or datetime.now() >= myAlarmScheduler.alarm_time+WINDOW-timedelta(minutes=1):
-                                myAlarmScheduler.alarmStart()
+    while myAlarmScheduler.isActive():
+        try:
+            if myAlarmScheduler.alarm_set:
+                # Subscribe to motion sensor topic during the night
+                time_delta = WINDOW if myAlarmScheduler.adaptive_alarm else timedelta(seconds=30)
 
-                            if myAlarmScheduler.alarm == 1 and myAlarmScheduler.sensor_motion == 0:
-                                inactivity_counter += 1
+                while myAlarmScheduler.alarm_time - time_delta <= datetime.now() < myAlarmScheduler.alarm_time + time_delta and myAlarmScheduler.isActive():
+                    if (myAlarmScheduler.alarm == 0 and myAlarmScheduler.sleep_state == 'light') or datetime.now() >= myAlarmScheduler.alarm_time:
+                        myAlarmScheduler.alarmStart()
+                        break
 
-                            if (myAlarmScheduler.alarm == 1 and myAlarmScheduler.sensor_motion == 1) or inactivity_counter == 60:
-                                myAlarmScheduler.alarmStop()
-                                break
+                while myAlarmScheduler.alarm == 1:
+                    if myAlarmScheduler.sensor_motion or datetime.now() - myAlarmScheduler.alarm_time > timedelta(seconds=60):
+                        myAlarmScheduler.alarmStop()
 
-                            time.sleep(1)
+            time.sleep(15)
+        except KeyboardInterrupt:
+            logging.info(myAlarmScheduler.client.stop())
 
-                        logging.info(myAlarmScheduler.client.myUnsubscribe(myAlarmScheduler.main_topic + '/sensors/#'))
-                        logging.info(myAlarmScheduler.client.myUnsubscribe(myAlarmScheduler.main_topic + '/sleep_state'))
-                time.sleep(15)
-            except KeyboardInterrupt:
-                logging.info(myAlarmScheduler.client.stop())
-
-        logging.info(myAlarmScheduler.client.stop())
+    logging.info(myAlarmScheduler.client.stop())
 
 
 if __name__ == '__main__':
@@ -164,36 +158,17 @@ if __name__ == '__main__':
     devices = catalogue['devices']
     DEVICES = devices
 
-    # Instantiate and start the alarm scheduler
+    # Instantiate and start the alarm schedulers
     logging.info('Instantiating the schedulers')
     rooms = []
 
-    i = 0
     for dev in devices:
-        if 'motion' in dev["sensors"] and 'alarm' in dev["actuators"]:
-            url = f'http://{dev["ip"]}:{dev["port"]}'
-            id = 'AlarmSchedulerService_' + dev["name"] + str(i)
-            room_name = dev['name']
-            rooms.append(AlarmSchedulerService(id, room_name, url, broker_host, broker_port))
-            logging.info(rooms[-1].client.start())
-            i += 1
+        room_url = f'http://{dev["ip"]}:{dev["port"]}'
+        room_id = 'AlarmSchedulerService_' + dev["name"]
+        rooms.append(AlarmSchedulerService(room_id, dev["name"], room_url, broker_host, broker_port))
+        logging.info(rooms[-1].client.start())
 
-    # rb_url = 'http://127.0.0.1:8080'
-    # main_topic = 'Time2sleep/bedroom3/'
-    # broker_host = '127.0.0.1'
-    # broker_port = 1883
-
-    # Instantiate and start the sleep state evaluator
-    # logging.info('Instantiating the Scheduler')
-    # myAlarmScheduler = AlarmSchedulerService('SleepStateService', rb_url, broker_host, broker_port)
-    # logging.info('raspberry_url:%s, main_topic:%s, broker_host:%s, broker_port:%d',
-    #              rb_url, myAlarmScheduler.main_topic, broker_host, broker_port)
-    # logging.info(myAlarmScheduler.client.start())
-
-    # Subscribe to config change alert topic
-    # TODO: for room in rooms:     mySleepStateEval.client.mySubscribe(main_topic + room + '/config_updates')
-
-    roomThreads = list()
+    roomThreads = []
     for room in rooms:
         roomThreads.append(threading.Thread(target=runAlarmScheduler, args=(room,)))
 

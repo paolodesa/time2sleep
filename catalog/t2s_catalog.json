@@ -1,6 +1,15 @@
 {
     "broker_host": "localhost",
     "broker_port": 1883,
-    "devices": [],
-    "last_updated": 1600076150.9556482
+    "devices": [
+        {
+            "actuators": [],
+            "ip": "192.168.178.83",
+            "last_seen": 1600251901.8453834,
+            "name": "New Room",
+            "port": 8080,
+            "sensors": []
+        }
+    ],
+    "last_updated": 1600251901.8493679
 }
