@@ -26,6 +26,8 @@ class SleepStateService:
         self.sensor_vibration = 0
         self.state = "light"
         self.alarm_set = False
+        self.night_monitoring = False
+        self.adaptive_alarm = False
 
         self.rb_url = rb_url
         self.night_start = 0
@@ -80,8 +82,10 @@ class SleepStateService:
         self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%Y,%m,%d,%H,%M')
         self.main_topic = config_dict['network_name'] + '/' + config_dict['room_name']
         self.alarm_set = config_dict['alarm_set']
-        logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s, alarm_set: %s', self.night_start,
-                     self.alarm_time, self.alarm_set)
+        self.night_monitoring = config_dict['night_monitoring']
+        self.adaptive_alarm = config_dict['adaptive_alarm']
+        logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s, alarm_set: %s, night_monitoring: %s, adaptive_alarm: %s', self.night_start,
+                     self.alarm_time, self.alarm_set, self.night_monitoring, self.adaptive_alarm)
 
     def isActive(self):
         global DEVICES
@@ -126,15 +130,17 @@ def runSleepStateEval(mySleepStateEval):
 
         while mySleepStateEval.isActive():
             try:
-                if mySleepStateEval.alarm_time and mySleepStateEval.alarm_set:
+                if mySleepStateEval.alarm_time and mySleepStateEval.night_monitoring:
                     # Subscribe to motion sensor topic during the night
-                    if mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time + WINDOW:
+                    time_delta = WINDOW if mySleepStateEval.adaptive_alarm else timedelta(seconds=30)
+                    if mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time + time_delta:
                         logging.info(mySleepStateEval.client.mySubscribe(mySleepStateEval.main_topic + '/sensors/#'))
                         logging.info(mySleepStateEval.client.mySubscribe(mySleepStateEval.main_topic + '/actuators/alarm'))
 
-                        while mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time + WINDOW and mySleepStateEval.isActive():
+                        while mySleepStateEval.night_start <= datetime.now() <= mySleepStateEval.alarm_time + time_delta and mySleepStateEval.isActive():
                             time.sleep(1)
-                            if mySleepStateEval.alarm_set == False:
+                            if mySleepStateEval.alarm_stopped == True:
+                                mySleepStateEval.alarm_stopped = False
                                 break
                             else:
                                 mySleepStateEval.evalState()

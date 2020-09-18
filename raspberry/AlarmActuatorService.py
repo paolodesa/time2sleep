@@ -18,6 +18,7 @@ class AlarmActuatorService:
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
         self.alarm = 0
         self.alarm_set = False
+        self.adaptive_alarm = False
 
         self.night_start = 0
         self.alarm_time = 0
@@ -55,8 +56,9 @@ class AlarmActuatorService:
         self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%Y,%m,%d,%H,%M')
         self.alarm_set = config_dict['alarm_set']
         self.main_topic = config_dict['network_name'] + '/' + config_dict['room_name']
-        logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s, alarm_set: %s', self.night_start,
-                     self.alarm_time, self.alarm_set)
+        self.adaptive_alarm = config_dict['adaptive_alarm']
+        logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s, alarm_set: %s, adaptive_alarm: %s', self.night_start,
+                     self.alarm_time, self.alarm_set, self.adaptive_alarm)
 
 
 if __name__ == '__main__':
@@ -86,10 +88,12 @@ if __name__ == '__main__':
     while True:
         try:
             if myAlarmActuator.alarm_time and myAlarmActuator.alarm_set:
-                if myAlarmActuator.alarm_time-WINDOW <= datetime.now() <= myAlarmActuator.alarm_time + WINDOW:
+                time_delta = WINDOW if myAlarmActuator.adaptive_alarm else timedelta(seconds=30)
+
+                if myAlarmActuator.alarm_time-time_delta <= datetime.now() <= myAlarmActuator.alarm_time + time_delta:
                     logging.info(myAlarmActuator.client.mySubscribe(myAlarmActuator.main_topic + '/actuators/alarm'))
 
-                    while myAlarmActuator.alarm_time-WINDOW <= datetime.now() < myAlarmActuator.alarm_time+WINDOW:
+                    while myAlarmActuator.alarm_time-time_delta <= datetime.now() < myAlarmActuator.alarm_time+time_delta:
 
                         if myAlarmActuator.alarm == 1:
                             myAlarmActuator.alarmStart()
