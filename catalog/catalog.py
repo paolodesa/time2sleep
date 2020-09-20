@@ -1,8 +1,11 @@
+import sys
 import cherrypy
 import json
 import time
 import datetime
+import socket
 
+sys.path.insert(0, "../")
 
 class ServiceCatalog(object):
     exposed = True
@@ -33,7 +36,8 @@ class ServiceCatalog(object):
                         f.close()
                         raise cherrypy.HTTPError(400, 'Bad request')
 
-                    new_dev = {'ip': ip, 'port': port, 'name': name, 'sensors': sensors, 'actuators': actuators, 'last_seen': last_seen}
+                    new_dev = {'ip': ip, 'port': port, 'name': name, 'sensors': sensors, 'actuators': actuators,
+                               'last_seen': last_seen}
 
                     for d in t2s_catalog['devices']:
                         if d['ip'] == ip:
@@ -96,6 +100,15 @@ class ServiceCatalog(object):
                 f.close()
 
 
+def get_ip_address():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    except:
+        return None
+
+
 if __name__ == '__main__':
     catalog = ServiceCatalog()
     conf = {
@@ -108,7 +121,8 @@ if __name__ == '__main__':
     cherrypy.config.update({'server.socket_host': '0.0.0.0', 'server.socket_port': 8082})
     cherrypy.tree.mount(catalog, '/', conf)
     cherrypy.engine.start()
-
+    # with open("etc/globalVar.py") as f:
+    #     f.write(f"CATALOG_ADDRESS = 'http://${get_ip_address()}:8082'")
     while True:
         try:
             catalog.removeInactive()

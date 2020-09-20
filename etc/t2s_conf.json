@@ -1,11 +1,11 @@
 {
     "actuators": [],
     "adaptive_alarm": false,
-    "alarm_set": false,
+    "alarm_set": true,
     "alarm_time": "2020,09,16,12,03",
     "light_set": false,
-    "network_name": "Time2Sleep",
-    "night_monitoring": false,
+    "network_name": "FedericoNet",
+    "night_monitoring": true,
     "night_start": "2020,09,16,12,03",
     "room_name": "New Room",
     "sensors": []

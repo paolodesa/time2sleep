@@ -2,6 +2,7 @@
 # to retrieve it. The catalogue will be reached anyway to retrieve the broker end points.
 
 import sys
+
 sys.path.insert(0, "../")
 from etc.MyMQTT import *
 from etc.globalVar import CATALOG_ADDRESS
@@ -15,23 +16,26 @@ import etc.Freenove_DHT as DHT
 import pyaudio
 import numpy as np
 
-CHUNK = 2**11
+CHUNK = 2 ** 11
 RATE = 44100
 
 motionSensorPin = 11
 DHTPin = 7
 
+
 def setup():
     print('Sensors are starting')
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(motionSensorPin, GPIO.IN)
+    GPIO.setup(vibrationSensorPin, GPIO.IN)
+
 
 if __name__ == '__main__':
     setup()
     dht = DHT.DHT(DHTPin)
-    p=pyaudio.PyAudio()
-    stream=p.open(format=pyaudio.paInt16,channels=1,rate=RATE,input=True,
-              frames_per_buffer=CHUNK)
+    p = pyaudio.PyAudio()
+    stream = p.open(format=pyaudio.paInt16, channels=1, rate=RATE, input=True,
+                    frames_per_buffer=CHUNK)
 
     with open('../etc/t2s_conf.json', 'r') as f:
         t2s_conf = json.load(f)
@@ -68,13 +72,18 @@ if __name__ == '__main__':
             else:
                 motion = 0
 
+            # if GPIO.input(vibrationSensorPin) == GPIO.HIGH:
+            #     vibration = 1
+            # else:
+            #     vibration= 0
+
             chk = dht.readDHT11()
             if chk is dht.DHTLIB_OK:
                 temperature = dht.temperature
                 humidity = dht.humidity
 
-            data = np.fromstring(stream.read(CHUNK,exception_on_overflow=False),dtype=np.int16)
-            peak = np.average(np.abs(data))*2
+            data = np.fromstring(stream.read(CHUNK, exception_on_overflow=False), dtype=np.int16)
+            peak = np.average(np.abs(data)) * 2
             noise = peak
 
             # Publishing Data
@@ -104,7 +113,7 @@ if __name__ == '__main__':
 
         except KeyboardInterrupt:
             break
-    
+
     GPIO.cleanup()
 
     stream.stop_stream()
