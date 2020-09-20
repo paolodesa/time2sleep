@@ -39,6 +39,8 @@ class ConfigManager:
                 new_alarm_time = datetime.strftime(self.t2s_config['alarm_time'] + timedelta(days=1), '%Y,%m,%d,%H,%M')
                 self.t2s_config['nigh_start'] = new_night_start
                 self.t2s_config['alarm_time'] = new_alarm_time
+                self.t2s_config['alarm_set'] = False
+                self.t2s_config['adaptive_alarm'] = False
 
                 self.save_config(self.t2s_config)
 
