@@ -103,8 +103,11 @@ class SimpleService(object):
 
     def get_ip_address(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        return s.getsockname()[0]
+        try:
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]
+        except:
+            return None
 
     def pingCatalog(self):
         ip = self.get_ip_address()
@@ -118,7 +121,8 @@ class SimpleService(object):
         body = {'ip': ip, 'port': port, 'name': name, 'sensors': sensors, 'actuators': actuators,
                 'last_seen': time.time()}
         print(body)
-        requests.post(CATALOG_ADDRESS + '/addDevice', json.dumps(body))
+        if ip != None:
+            requests.post(CATALOG_ADDRESS + '/addDevice', json.dumps(body))
 
 
 if __name__ == '__main__':
