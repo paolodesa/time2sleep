@@ -65,7 +65,6 @@ class AlarmSchedulerService:
         self.sleep_state = 'awake'
         msg = json.dumps({'sleep_state': 'awake'})
         self.client.myPublish(self.main_topic + '/sleep_state', msg)
-        self.alarm_set = False
 
     def updateConfig(self):
         # -- Retrieve here the config file from the RaspBerry
