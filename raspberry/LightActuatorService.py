@@ -94,20 +94,13 @@ if __name__ == '__main__':
     logging.info(myLightActuator.client.start())
 
     logging.info(myLightActuator.client.mySubscribe(myLightActuator.main_topic + '/config_updates'))
-        
+    logging.info(myLightActuator.client.mySubscribe(myLightActuator.main_topic + '/actuators/light'))
     while True:
         try:
-            if myLightActuator.night_start <= datetime.now() <= myLightActuator.alarm_time + WINDOW:
-                logging.info(myLightActuator.client.mySubscribe(myLightActuator.main_topic + '/actuators/light'))
-                while myLightActuator.night_start <= datetime.now() <= myLightActuator.alarm_time + WINDOW:
-                    if myLightActuator.light_set:
-                        if myLightActuator.light == 1:
-                            myLightActuator.lightStart()
-                        else:
-                            myLightActuator.lightStop()
+            if myLightActuator.light == 1:
+                myLightActuator.lightStart()
+            else:
                 myLightActuator.lightStop()
-                logging.info(myLightActuator.client.myUnsubscribe(myLightActuator.main_topic + '/actuators'))
-            time.sleep(15)
 
         except KeyboardInterrupt:
             logging.info(myLightActuator.client.stop())

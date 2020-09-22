@@ -62,6 +62,7 @@ class LightControllerService:
         self.night_start = datetime.strptime(config_dict['night_start'], '%Y,%m,%d,%H,%M')
         self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%Y,%m,%d,%H,%M')
         self.main_topic = config_dict['network_name'] + '/' + config_dict['room_name']
+        self.light_set = config_dict['light_set']
         logging.info(self.client.clientID + ' CONFIG - night_start: %s, alarm_time: %s', self.night_start, self.alarm_time)
     
     def isActive(self):
@@ -123,6 +124,7 @@ def runLightController(myLightController):
                             if ctr > 5:
                                 myLightController.LightOff()
                     time.sleep(1)
+                myLightController.LightOff()
 
                 logging.info(myLightController.client.myUnsubscribe(myLightController.main_topic + '/sensors/motion'))
 
