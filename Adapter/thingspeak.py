@@ -5,9 +5,11 @@ from etc.MyMQTT import *
 import json
 import time
 import requests
+from datetime import datetime as dt
+from etc.globalVar import CATALOG_ADDRESS
 
 
-class LocalSubscriber():
+class LocalSubscriber:
     def __init__(self, clientID, broker_host, broker_port):
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
         self.vibration = None
@@ -19,6 +21,7 @@ class LocalSubscriber():
 
     def notify(self, msg_topic, msg_payload):
         payload = json.loads(msg_payload)
+        print(msg_topic, '  --  ', payload)
         if msg_topic == local_topic + '/sensors/vibration':
             self.vibration = str(payload['value'])
 
@@ -43,8 +46,17 @@ class LocalSubscriber():
                 self.sleepState = '0'
 
 
-local_topic = 'time2sleep/Bedroom'
-local_client = LocalSubscriber('local', '127.0.0.1', 1883)
+local_topic = 'FedericoNet/NewRoom'
+catalogue = requests.get(CATALOG_ADDRESS).json()
+broker_host = catalogue['broker_host']
+broker_port = catalogue['broker_port']
+main_topic = ""
+for dev in catalogue['devices']:
+    r = requests.get(dev.ip+':'+dev.port)
+    config_dict = r.json()
+    main_topic = config_dict["network_name"] + "/" + config_dict["room_name"]
+
+local_client = LocalSubscriber('local', broker_host, broker_port)
 local_client.client.start()
 local_client.client.mySubscribe(local_topic + '/#')
 while True:
@@ -60,6 +72,7 @@ while True:
                                 f'&field4={local_client.temperature}'
                                 f'&field5={local_client.humidity}'
                                 f'&field6={local_client.sleepState}')
+                    print(dt.now(), ' - data pushed to TS')
                 except requests.ConnectionError:
                     time.sleep(5)
                     continue

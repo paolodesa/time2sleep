@@ -49,6 +49,7 @@ class ServiceCatalog(object):
                     f.write(json.dumps(t2s_catalog, indent=4, sort_keys=True))
                     f.truncate()
                     f.close()
+                    print(f'${new_dev["name"]} - added to the catalog')
                     return 'catalog file successfully written'
             except KeyError:
                 raise cherrypy.HTTPError(404, 'The catalog file was not found')

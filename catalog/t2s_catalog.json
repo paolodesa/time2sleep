@@ -1,6 +1,6 @@
 {
-    "broker_host": "localhost",
+    "broker_host": "192.168.178.83",
     "broker_port": 1883,
     "devices": [],
-    "last_updated": 1600600455.313545
+    "last_updated": 1600790850.4336636
 }

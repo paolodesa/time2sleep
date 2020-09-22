@@ -16,6 +16,8 @@ class ConfigManager:
         self.broker_host = broker_host
         self.broker_port = broker_port
 
+        self.light_on = False
+
         self.client = MyMQTT(clientID, broker_host, broker_port, self)
         self.t2s_config = None
         self.main_topic = ''
@@ -48,13 +50,20 @@ class ConfigManager:
         self.update_config()
 
     def publish_update(self):
-        with open('../etc/t2s_conf.json', 'r') as f:
-            t2s_conf = json.load(f)
+        # Publish on the broker that a new configuration is available for this room
+        msg = json.dumps({"timestamp": str(time.time())})
+        self.client.myPublish(self.main_topic + '/config_updates', msg)
+        # print(self.broker_host, ' ', broker_port, ' ', self.main_topic+'/config_updates', ' ', msg)
 
-            # Publish on the broker that a new configuration is available for this room
-            msg = json.dumps({"timestamp": str(time.time())})
-            self.client.myPublish(self.main_topic + '/config_updates', msg)
+    def LightOn(self):
+        msg = json.dumps({'value': 1})
+        self.client.myPublish(self.main_topic + '/actuators/light', msg)
+        self.light_on = True
 
+    def LightOff(self):
+        msg = json.dumps({'value': 0})
+        self.client.myPublish(self.main_topic + '/actuators/light', msg)
+        self.light_on = False
 
 class SimpleService(object):
     exposed = True
@@ -63,13 +72,19 @@ class SimpleService(object):
         pass
 
     def GET(self, *uri, **params):
-        try:
-            with open('../etc/t2s_conf.json', 'r') as f:
-                t2s_conf = json.load(f)
-                f.close()
-            return json.dumps(t2s_conf)
-        except OSError:
-            return None
+        if len(uri) == 1 and uri[0] == 'toggle_light':
+            if myConfigManager.light_on:
+                myConfigManager.LightOff()
+            else:
+                myConfigManager.LightOn()
+        else:
+            try:
+                with open('../etc/t2s_conf.json', 'r') as f:
+                    t2s_conf = json.load(f)
+                    f.close()
+                return json.dumps(t2s_conf)
+            except OSError:
+                return None
 
     def POST(self, *uri):
         if len(uri) == 1 and uri[0] == 'changeConfig':
@@ -77,29 +92,6 @@ class SimpleService(object):
             myConfigManager.save_config(config_update)
             myConfigManager.publish_update()
             return 'Configuration file successfully written and published to broker'
-
-        # elif len(uri) == 1 and uri[0] == 'toggleLight':
-        #     # function to manually toggle the light on
-        #     try:
-        #         with open('../etc/t2s_conf.json', 'r+') as f:
-        #             t2s_conf = json.load(f)
-        #             config_update = json.loads(cherrypy.request.body.read())
-        #             try:
-        #                 light_set = config_update['light_set']
-        #             except KeyError:
-        #                 f.close()
-        #                 raise cherrypy.HTTPError(400, 'One of the keys is missing')
-        #             t2s_conf['light_set'] = light_set
-        #             f.seek(0)
-        #             f.write(json.dumps(t2s_conf, indent=4, sort_keys=True))
-        #             f.truncate()
-        #             f.close()
-        #             myConfigManger.client.myPublish(
-        #                 f'{t2s_conf["network_name"]}/{t2s_conf["room_name"]}/config_updates', json.dumps(t2s_conf))
-        #             myConfigManager.client.stop()
-        #             return 'Configuration file successfully written and published to broker'
-        #     except KeyError:
-        #         raise cherrypy.HTTPError(404, 'The configuration file was not found')
 
     def get_ip_address(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -120,7 +112,6 @@ class SimpleService(object):
         actuators = conf['actuators']
         body = {'ip': ip, 'port': port, 'name': name, 'sensors': sensors, 'actuators': actuators,
                 'last_seen': time.time()}
-        print(body)
         if ip != None:
             requests.post(CATALOG_ADDRESS + '/addDevice', json.dumps(body))
 
@@ -130,6 +121,7 @@ if __name__ == '__main__':
     broker_host = catalogue['broker_host']
     broker_port = catalogue['broker_port']
     myConfigManager = ConfigManager('ConfigManager_', broker_host, broker_port)
+    myConfigManager.client.start()
 
     s = SimpleService()
     conf = {
