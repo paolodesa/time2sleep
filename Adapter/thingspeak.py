@@ -21,7 +21,7 @@ class LocalSubscriber:
 
     def notify(self, msg_topic, msg_payload):
         payload = json.loads(msg_payload)
-        print(msg_topic, '  --  ', payload)
+        # print(msg_topic, '  --  ', payload)
         if msg_topic == local_topic + '/sensors/vibration':
             self.vibration = str(payload['value'])
 
@@ -51,10 +51,10 @@ catalogue = requests.get(CATALOG_ADDRESS).json()
 broker_host = catalogue['broker_host']
 broker_port = catalogue['broker_port']
 main_topic = ""
-for dev in catalogue['devices']:
-    r = requests.get(dev.ip+':'+dev.port)
-    config_dict = r.json()
-    main_topic = config_dict["network_name"] + "/" + config_dict["room_name"]
+# for dev in catalogue['devices']:
+#     r = requests.get(dev.ip+':'+dev.port)
+#     config_dict = r.json()
+#     main_topic = config_dict["network_name"] + "/" + config_dict["room_name"]
 
 local_client = LocalSubscriber('local', broker_host, broker_port)
 local_client.client.start()

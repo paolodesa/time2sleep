@@ -68,6 +68,8 @@ class AlarmSchedulerService:
 
     def updateConfig(self):
         # -- Retrieve here the config file from the RaspBerry
+        msg = json.dumps({'sleep_state': 'awake'})
+        self.client.myPublish(self.main_topic + '/sleep_state', msg)
         r = requests.get(self.rb_url)
         config_dict = r.json()
         self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%Y,%m,%d,%H,%M')
