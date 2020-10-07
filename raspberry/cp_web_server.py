@@ -48,6 +48,7 @@ class ConfigManager:
         with open('../etc/t2s_conf.json', 'w') as f:
             f.write(json.dumps(new_config, indent=4, sort_keys=True))
         self.update_config()
+        self.publish_update()
 
     def publish_update(self):
         # Publish on the broker that a new configuration is available for this room
