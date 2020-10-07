@@ -1,24 +1,6 @@
 {
-    "broker_host": "192.168.42.200",
+    "broker_host": "192.168.178.83",
     "broker_port": 1883,
-    "devices": [
-        {
-            "actuators": [
-                "alarm",
-                "light"
-            ],
-            "ip": "192.168.42.200",
-            "last_seen": 1602065163.5710921,
-            "name": "NewRoom",
-            "port": 8080,
-            "sensors": [
-                "temperature",
-                "humidity",
-                "vibration",
-                "motion",
-                "noise"
-            ]
-        }
-    ],
-    "last_updated": 1602065163.5760872
+    "devices": [],
+    "last_updated": 1602076917.2344491
 }
