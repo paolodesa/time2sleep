@@ -59,13 +59,24 @@ if __name__ == '__main__':
     DataPublisher = MyMQTT(main_topic, broker_host, broker_port, None)
     DataPublisher.start()
 
+    # Simulation of sensors data for debugging
+    last_t = random.randint(18, 28)
+    last_hum = random.randint(40, 80)
+    last_noise = random.randint(10, 20)
+    c = -1
+
     while True:
+        c += 1
         try:
-            temperature = random.randint(10, 30)
-            humidity = random.randint(50, 90)
-            vibration = random.randint(0, 1)
-            motion = random.randint(0, 1)
-            noise = random.randint(20, 90)
+            # Simulation of sensors data for debugging
+            temperature = int(random.gauss(last_t, 1))
+            humidity = int(random.gauss(last_hum, 1))
+            vibration = random.randint(0, 1) if c <= 120 or c >= 480 else 0
+            motion = 1 if c <= 30 or c >= 560 else 0
+            noise = int(random.gauss(last_noise, 2))
+            last_t = 18 if temperature < 18 else 28 if temperature > 28 else temperature
+            last_hum = 40 if humidity < 40 else 80 if humidity > 80 else humidity
+            last_noise = 10 if noise < 10 else 15 if noise > 20 else noise
 
             # if GPIO.input(motionSensorPin) == GPIO.HIGH:
             #     motion = 1
