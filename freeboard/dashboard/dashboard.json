@@ -6,6 +6,7 @@
             "name": "Bedroom",
             "settings": {
                 "method": "GET",
+                "name": "Bedroom",
                 "refresh": 15,
                 "url": "https://api.thingspeak.com/channels/1127842/feeds.json?results=2",
                 "use_thingproxy": true
@@ -42,6 +43,65 @@
                         "value": "datasources[\"Bedroom\"][\"feeds\"][1][\"field5\"]"
                     },
                     "type": "gauge"
+                }
+            ],
+            "width": 1
+        },
+        {
+            "col": {
+                "3": 3
+            },
+            "col_width": 1,
+            "row": {
+                "3": 1
+            },
+            "widgets": [
+                {
+                    "settings": {
+                        "title": "Motion",
+                        "value": "datasources[\"Bedroom\"][\"feeds\"][1][\"field3\"]"
+                    },
+                    "type": "sparkline"
+                },
+                {
+                    "settings": {
+                        "title": "Vibration",
+                        "value": "datasources[\"Bedroom\"][\"feeds\"][1][\"field1\"]"
+                    },
+                    "type": "sparkline"
+                },
+                {
+                    "settings": {
+                        "title": "Noise",
+                        "value": "datasources[\"Bedroom\"][\"feeds\"][1][\"field2\"]"
+                    },
+                    "type": "sparkline"
+                }
+            ],
+            "width": 1
+        },
+        {
+            "col": {
+                "3": 2
+            },
+            "col_width": 1,
+            "row": {
+                "3": 1
+            },
+            "widgets": [
+                {
+                    "settings": {
+                        "title": "Temperature",
+                        "value": "datasources[\"Bedroom\"][\"feeds\"][1][\"field4\"]"
+                    },
+                    "type": "sparkline"
+                },
+                {
+                    "settings": {
+                        "title": "Humidity",
+                        "value": "datasources[\"Bedroom\"][\"feeds\"][1][\"field5\"]"
+                    },
+                    "type": "sparkline"
                 }
             ],
             "width": 1
