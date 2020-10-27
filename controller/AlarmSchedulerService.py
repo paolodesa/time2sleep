@@ -46,6 +46,7 @@ class AlarmSchedulerService:
             self.sleep_state = message['sleep_state']
 
         if topic == self.main_topic + '/config_updates':
+            print('New Configuration: ' + str(message))
             self.updateConfig()
             self.last_update = message['timestamp']
 
@@ -124,7 +125,6 @@ def runAlarmScheduler(myAlarmScheduler):
     while myAlarmScheduler.isActive():
         try:
             if myAlarmScheduler.alarm_set:
-                # Subscribe to motion sensor topic during the night
                 time_delta = WINDOW if myAlarmScheduler.adaptive_alarm else timedelta(seconds=30)
 
                 while myAlarmScheduler.alarm_time - time_delta <= datetime.now() < myAlarmScheduler.alarm_time + time_delta and myAlarmScheduler.isActive():
@@ -133,7 +133,7 @@ def runAlarmScheduler(myAlarmScheduler):
                         break
 
                 while myAlarmScheduler.alarm == 1:
-                    if myAlarmScheduler.sensor_motion or datetime.now() - myAlarmScheduler.alarm_time > timedelta(seconds=60):
+                    if myAlarmScheduler.sensor_motion or datetime.now() - myAlarmScheduler.alarm_time > timedelta(seconds=30):
                         myAlarmScheduler.alarmStop()
 
             time.sleep(15)

@@ -64,13 +64,9 @@ class SleepStateService:
     def evalState(self):
         if self.sensor_motion + self.sensor_vibration >= THRESHOLD:
             self.state = 'light'
-            self.counter = 0
         elif self.sensor_motion + self.sensor_vibration < THRESHOLD:
-            self.counter += 1
-            if self.counter > 60:
-                self.state = 'deep'
-            else:
-                self.state = 'light'
+            self.state = 'deep'
+
 
         msg = json.dumps({'sleep_state': self.state})
         self.client.myPublish(self.main_topic + '/sleep_state', msg)

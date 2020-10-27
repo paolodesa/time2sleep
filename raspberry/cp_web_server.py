@@ -29,7 +29,7 @@ class ConfigManager:
                 self.t2s_config = json.load(f)
                 self.main_topic = self.t2s_config['network_name'] + '/' + self.t2s_config['room_name']
                 if not self.client.isSubscriber:
-                    self.client.mySubscribe(self.main_topic + '/sleep_state')
+                    print(self.client.mySubscribe(self.main_topic + '/sleep_state'))
         except OSError:
             return 'Configuration file not found'
 
@@ -37,10 +37,10 @@ class ConfigManager:
         message = json.loads(payload)
         if topic == self.main_topic + '/sleep_state':
             if message['sleep_state'] == 'awake':
-                new_night_start = datetime.strftime(self.t2s_config['night_start'] + timedelta(days=1), '%Y,%m,%d,%H,%M')
-                new_alarm_time = datetime.strftime(self.t2s_config['alarm_time'] + timedelta(days=1), '%Y,%m,%d,%H,%M')
-                self.t2s_config['nigh_start'] = new_night_start
-                self.t2s_config['alarm_time'] = new_alarm_time
+                new_night_start = datetime.strptime(self.t2s_config['night_start'], '%Y,%m,%d,%H,%M') + timedelta(days=1) #datetime.strftime(self.t2s_config['night_start'] + timedelta(days=1), '%Y,%m,%d,%H,%M')
+                new_alarm_time = datetime.strptime(self.t2s_config['alarm_time'], '%Y,%m,%d,%H,%M') + timedelta(days=1) #datetime.strftime(self.t2s_config['alarm_time'] + timedelta(days=1), '%Y,%m,%d,%H,%M')
+                self.t2s_config['night_start'] = datetime.strftime(new_night_start, '%Y,%m,%d,%H,%M')
+                self.t2s_config['alarm_time'] = datetime.strftime(new_alarm_time, '%Y,%m,%d,%H,%M')
 
                 self.save_config(self.t2s_config)
 
@@ -48,6 +48,7 @@ class ConfigManager:
         with open('../etc/t2s_conf.json', 'w') as f:
             f.write(json.dumps(new_config, indent=4, sort_keys=True))
         self.update_config()
+        self.publish_update()
 
     def publish_update(self):
         # Publish on the broker that a new configuration is available for this room
@@ -64,6 +65,7 @@ class ConfigManager:
         msg = json.dumps({'value': 0})
         self.client.myPublish(self.main_topic + '/actuators/light', msg)
         self.light_on = False
+
 
 class SimpleService(object):
     exposed = True

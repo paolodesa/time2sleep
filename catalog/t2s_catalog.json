@@ -1,6 +1,24 @@
 {
     "broker_host": "192.168.178.83",
     "broker_port": 1883,
-    "devices": [],
-    "last_updated": 1600790850.4336636
+    "devices": [
+        {
+            "actuators": [
+                "alarm",
+                "light"
+            ],
+            "ip": "192.168.178.107",
+            "last_seen": 1602082824.0599601,
+            "name": "Bedroom",
+            "port": 8080,
+            "sensors": [
+                "temperature",
+                "humidity",
+                "vibration",
+                "motion",
+                "noise"
+            ]
+        }
+    ],
+    "last_updated": 1602082823.880293
 }

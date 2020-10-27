@@ -122,8 +122,16 @@ if __name__ == '__main__':
     cherrypy.config.update({'server.socket_host': '0.0.0.0', 'server.socket_port': 8082})
     cherrypy.tree.mount(catalog, '/', conf)
     cherrypy.engine.start()
-    # with open("etc/globalVar.py") as f:
-    #     f.write(f"CATALOG_ADDRESS = 'http://${get_ip_address()}:8082'")
+    with open("../etc/globalVar.py", 'w') as f:
+        f.write(f"CATALOG_ADDRESS = 'http://{get_ip_address()}:8082'")
+
+    with open('t2s_catalog.json', 'r') as f:
+        my_catalog = json.load(f)
+        my_catalog['broker_host'] = str(get_ip_address())
+
+    with open('t2s_catalog.json', 'w') as f:
+        f.write(json.dumps(my_catalog, indent=4, sort_keys=True))
+
     while True:
         try:
             catalog.removeInactive()
