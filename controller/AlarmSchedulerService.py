@@ -46,7 +46,6 @@ class AlarmSchedulerService:
             self.sleep_state = message['sleep_state']
 
         if topic == self.main_topic + '/config_updates':
-            print('New Configuration: ' + str(message))
             self.updateConfig()
             self.last_update = message['timestamp']
 
@@ -69,6 +68,8 @@ class AlarmSchedulerService:
 
     def updateConfig(self):
         # -- Retrieve here the config file from the RaspBerry
+        msg = json.dumps({'sleep_state': 'awake'})
+        self.client.myPublish(self.main_topic + '/sleep_state', msg)
         r = requests.get(self.rb_url)
         config_dict = r.json()
         self.alarm_time = datetime.strptime(config_dict['alarm_time'], '%Y,%m,%d,%H,%M')
@@ -125,6 +126,7 @@ def runAlarmScheduler(myAlarmScheduler):
     while myAlarmScheduler.isActive():
         try:
             if myAlarmScheduler.alarm_set:
+                # Subscribe to motion sensor topic during the night
                 time_delta = WINDOW if myAlarmScheduler.adaptive_alarm else timedelta(seconds=30)
 
                 while myAlarmScheduler.alarm_time - time_delta <= datetime.now() < myAlarmScheduler.alarm_time + time_delta and myAlarmScheduler.isActive():
@@ -133,7 +135,7 @@ def runAlarmScheduler(myAlarmScheduler):
                         break
 
                 while myAlarmScheduler.alarm == 1:
-                    if myAlarmScheduler.sensor_motion or datetime.now() - myAlarmScheduler.alarm_time > timedelta(seconds=30):
+                    if myAlarmScheduler.sensor_motion or datetime.now() - myAlarmScheduler.alarm_time > timedelta(seconds=60):
                         myAlarmScheduler.alarmStop()
 
             time.sleep(15)
